@@ -1,34 +1,34 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// 1. USER & AUTH
+// ==========================================
 model User {
-  id String @id @default(uuid())
-  email String @unique
-  name String?
-  password String
-  avatarUrl String?
-  address Address[]
-  role Role @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String         @id @default(uuid())
+  email        String         @unique
+  name         String?
+  password     String
+  avatarUrl    String?
+  role         Role           @default(CUSTOMER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
-  cart Cart?
-  orders Order[]
-  reviews Review[]
+  address      Address[]
+  cart         Cart?
+  orders       Order[]
+  reviews      Review[]
   refreshToken RefreshToken[]
 }
-
 
 enum Role {
   CUSTOMER
@@ -37,55 +37,73 @@ enum Role {
 }
 
 model RefreshToken {
-  id        String   @id
+  id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
  // token     String   @unique
-  device    String?  // VD: "Chrome - Windows", "Safari - iPhone"
+  device    String?
   expiresAt DateTime
   createdAt DateTime @default(now())
 
   @@index([userId])
 }
 
-
 model Address {
-  id String @id @default(uuid())
-  userId String 
-  user User @relation(fields: [userId] ,references: [id])
-  phone String?
-  street String?
-  ward String?
-  district String?
-  city String?
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  phone     String?
+  street    String?
+  ward      String?
+  district  String?
+  city      String?
   isDefault Boolean?
 
-  orders Order[]
+  orders    Order[]
+
   @@index([userId, phone])
 }
 
-model Series {
-  id String @id @default(uuid())
-  title String 
-  slug String
+// ==========================================
+// 2. PRODUCT CATALOG
+// ==========================================
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
   description String?
-  coverImage String?
-  type  Type
-  status Status
-  totalVolumes Int?
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  volumes Volume[]
-  reviews Review[]
-
+  series      Series[] // VÁ LỖI 1: Đã liên kết Category với Series
 }
 
-enum  Type {
+model Series {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  description  String?
+  coverImage   String?
+  
+  author       String?  // VÁ LỖI 2: Đã thêm Tác giả
+  publisher    String?  // VÁ LỖI 2: Đã thêm Nhà xuất bản
+  
+  type         Type
+  status       Status
+  totalVolumes Int?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id])
+
+  volumes      Volume[]
+  reviews      Review[]
+}
+
+enum Type {
   MANGA
   LIGHT_NOVEL
-  NOVEL 
+  NOVEL
   COMIC
   BOOK
 }
@@ -97,105 +115,118 @@ enum Status {
 }
 
 model Volume {
-  id String @id @default(uuid())
-  seriesId String
-  series Series @relation(fields: [seriesId], references: [id])
-  title String?
-  coverImage String?
-  price Decimal @db.Decimal(10,2)
-  originalPrice Decimal? @db.Decimal(10,2)
-  stock Int 
-  isbn String? @unique // mã ISBN
-  publishDate DateTime? 
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  seriesId      String
+  series        Series   @relation(fields: [seriesId], references: [id])
+  title         String?
+  coverImage    String?
+  price         Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2)
+  stock         Int      @default(0)
+  isbn          String?  @unique
+  publishDate   DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  cartItems CartItem[]
-  orderItems OrderItem[]
-
-
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  inventoryLogs InventoryTransaction[] // Liên kết lịch sử nhập kho
 }
 
-// nếu có thời gian thì chắc thêm tác giả với nhà xuất bản
-
-model Category {
-  id String @id @default(uuid())
-  name String 
-  slug String
-  description String?
-
+// ==========================================
+// 3. INVENTORY MANAGEMENT
+// ==========================================
+model InventoryTransaction {
+  id          String          @id @default(uuid())
+  volumeId    String
+  volume      Volume          @relation(fields: [volumeId], references: [id])
+  
+  type        TransactionType
+  quantity    Int             // VD: +50 (nhập), -2 (xuất/hư hỏng)
+  note        String?         // VD: "Nhập sách Kim Đồng đợt 1"
+  
+  createdAt   DateTime        @default(now())
 }
 
+enum TransactionType {
+  IMPORT
+  EXPORT
+  ADJUST
+}
 
+// ==========================================
+// 4. CART & ORDER
+// ==========================================
 model Cart {
-  id String @id @default(uuid())
-  userId String @unique
-  user User @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
-  items CartItem[]
+  items     CartItem[]
 }
 
 model CartItem {
-  id String @id @default(uuid())
-  cartId String
-  cart Cart @relation(fields: [cartId], references: [id])
+  id       String @id @default(uuid())
+  cartId   String
+  cart     Cart   @relation(fields: [cartId], references: [id])
   volumeId String
-  volume Volume @relation(fields: [volumeId], references: [id])
-  quantity Int 
+  volume   Volume @relation(fields: [volumeId], references: [id])
+  quantity Int
 }
 
 model Order {
-  id String @id @default(uuid())
-  userId String
-  user User @relation(fields: [userId], references: [id])
-  addressId String
-  address Address @relation(fields: [addressId], references: [id])
-  totalAmount Decimal @db.Decimal(10,2)
-  shippingFee Decimal @db.Decimal(10,2)
-  finalAmount Decimal @db.Decimal(10,2)
-  note String? 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  status OrderStatus @default(PENDING)
-  items OrderItem[]
-  payment Payment?
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  addressId   String
+  address     Address     @relation(fields: [addressId], references: [id])
+  totalAmount Decimal     @db.Decimal(10, 2)
+  shippingFee Decimal     @db.Decimal(10, 2)
+  finalAmount Decimal     @db.Decimal(10, 2)
+  note        String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  status      OrderStatus @default(PENDING)
+  
+  items       OrderItem[]
+  payment     Payment?
 }
+
 enum OrderStatus {
   PENDING
-  COFIRMED
+  CONFIRMED // CẢNH SAX SAI CHÍMH TAR Sửa COFIRMED của ăng thành CONFIRMED
   SHIPPING
   DELIVERED
   CANCELLED
 }
- 
+
 model OrderItem {
-  id String @id @default(uuid())
-  orderId String
-  order Order @relation(fields: [orderId], references: [id])
+  id       String  @id @default(uuid())
+  orderId  String
+  order    Order   @relation(fields: [orderId], references: [id])
   volumeId String
-  volume Volume @relation(fields: [volumeId], references: [id])
-  quantity Int 
-  price Decimal @db.Decimal(10,2)
+  volume   Volume  @relation(fields: [volumeId], references: [id])
+  quantity Int
+  price    Decimal @db.Decimal(10, 2)
 }
 
 model Payment {
-  id String @id @default(uuid())
-  orderId String @unique
-  order Order @relation(fields: [orderId], references: [id])
-  method Method
-  status StatusPayment
-  transactionId String? @unique
-  paidAt DateTime? 
-  createdAt DateTime
-
+  id            String        @id @default(uuid())
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+  method        Method
+  status        StatusPayment
+  transactionId String?       @unique
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
 }
 
 enum Method {
-  COD 
+  COD
   BANK
   MOMO
   VNPAY
@@ -210,15 +241,18 @@ enum StatusPayment {
   REFUNDED
 }
 
+// ==========================================
+// 5. REVIEWS
+// ==========================================
 model Review {
-  id String @id @default(uuid())
-  userId String 
-  user User @relation(fields: [userId], references: [id])
-  seriesId String
-  series Series @relation(fields: [seriesId], references: [id])
-  rating Int
-  comment String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  seriesId  String
+  series    Series    @relation(fields: [seriesId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }

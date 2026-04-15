@@ -13,17 +13,20 @@ const revenueData = [
   { name: 'CN', total: 3800 },
 ];
 
-const StatCard = ({ title, value, icon: Icon, colorClass }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
-    <div className={`p-4 rounded-xl ${colorClass}`}>
-      <Icon size={24} />
+const StatCard = ({ title, value, icon, colorClass }) => {
+  const Icon = icon;
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
+      <div className={`p-4 rounded-xl ${colorClass}`}>
+        <Icon size={24} />
+      </div>
+      <div>
+        <p className="text-sm font-medium text-stone-500">{title}</p>
+        <h3 className="text-2xl font-black text-stone-800">{value}</h3>
+      </div>
     </div>
-    <div>
-      <p className="text-sm font-medium text-stone-500">{title}</p>
-      <h3 className="text-2xl font-black text-stone-800">{value}</h3>
-    </div>
-  </div>
-);
+  );
+};
 
 const DashboardPage = () => {
   return (
