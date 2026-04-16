@@ -2,18 +2,20 @@ import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { Register, SignIn } from 'src/interface/dtos/auth.dto';
 import { Response, Request } from 'express';
+import { Public } from 'src/decorator/public/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   async register(
     @Body() dto: Register,
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
   ) {
-    // Fix: req.headers (có chữ s)
+
     const device = (req.headers['user-agent'] as string) || 'unknown';
     const data = await this.authService.register(dto, device);
 
@@ -27,6 +29,7 @@ export class AuthController {
     return { accessToken: data.accessToken, user: data.user };
   }
 
+  @Public()
   @Post('signin')
   async signIn(
     @Body() dto: SignIn,
@@ -56,6 +59,7 @@ export class AuthController {
     return { message: 'Đăng xuất thành công' };
   }
 
+  @Public()
   @Post('refresh')
   async refresh(
     @Req() req: Request,
