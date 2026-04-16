@@ -89,7 +89,6 @@ export class AuthService {
           .catch(() => {});
       }
     } catch (error) {
-      // Bỏ qua lỗi để tiến trình đăng xuất của user không bị kẹt
       console.error('Lỗi khi logout:', error);
     }
   }
@@ -112,7 +111,6 @@ export class AuthService {
         throw new UnauthorizedException('Phiên đăng nhập không hợp lệ');
       }
 
-      // FIX: Xóa refresh token cũ đi để tránh rác Database
       await this.prisma.refreshToken.delete({
         where: { id: payload.jti },
       });

@@ -64,16 +64,14 @@ model Address {
   @@index([userId, phone])
 }
 
-// ==========================================
-// 2. PRODUCT CATALOG
-// ==========================================
+
 model Category {
   id          String   @id @default(uuid())
   name        String
   slug        String   @unique
   description String?
 
-  series      Series[] // VÁ LỖI 1: Đã liên kết Category với Series
+  series      Series[] 
 }
 
 model Series {
@@ -83,8 +81,8 @@ model Series {
   description  String?
   coverImage   String?
   
-  author       String?  // VÁ LỖI 2: Đã thêm Tác giả
-  publisher    String?  // VÁ LỖI 2: Đã thêm Nhà xuất bản
+  author       String?  
+  publisher    String?
   
   type         Type
   status       Status
@@ -131,7 +129,7 @@ model Volume {
 
   cartItems     CartItem[]
   orderItems    OrderItem[]
-  inventoryLogs InventoryTransaction[] // Liên kết lịch sử nhập kho
+  inventoryLogs InventoryTransaction[] 
 }
 
 // ==========================================
@@ -241,9 +239,6 @@ enum StatusPayment {
   REFUNDED
 }
 
-// ==========================================
-// 5. REVIEWS
-// ==========================================
 model Review {
   id        String    @id @default(uuid())
   userId    String
