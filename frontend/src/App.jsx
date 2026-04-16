@@ -1,41 +1,38 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import CategoryPage from './pages/CategoryPage';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import HomePage from './pages/Home';
 import LoginPage from './pages/LoginPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CheckoutPage from './pages/CheckoutPage';
-import SuccessPage from './pages/SuccessPage';
-import SearchPage from './pages/SearchPage';
+import SeriesDetailPage from './pages/SeriesDetailPage';
 
-import AdminLayout from './pages/admin/AdminLayout';
-import DashboardPage from './pages/admin/DashboardPage';
+const Layout = ({ children }) => {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
+  return (
+    <>
+      {!isAuthPage && <Header />}
+      
+      {/* Nội dung các trang sẽ được render ở đây */}
+      <main className="min-h-screen">
+        {children}
+      </main>
+
+      {!isAuthPage && <Footer />}
+    </>
+  );
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Đường dẫn trang chủ */}
-        <Route path="/" element={<Home />} />
-        <Route path="/category" element={<CategoryPage />} />
-        <Route path="/product/:id" element={<ProductDetailPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/cart" element={<CheckoutPage />} />
-        <Route path="/success" element={<SuccessPage />} />
-        <Route path="/search" element={<SearchPage />} />
-
-        {/* --- LUỒNG QUẢN TRỊ VIÊN (ADMIN) --- */}
-        <Route path="/admin" element={<AdminLayout />}>
-          {/* Index route: khi vào /admin nó sẽ mặc định load DashboardPage */}
-          <Route index element={<DashboardPage />} />
-          
-          {/* Sau này bạn có thể tạo thêm trang và gắn vào đây: */}
-          {/* <Route path="products" element={<AdminProductsPage />} /> */}
-          {/* <Route path="orders" element={<AdminOrdersPage />} /> */}
-        </Route>
-
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/series/:slug" element={<SeriesDetailPage />} />
+        </Routes>
+      </Layout>
     </BrowserRouter>
   );
 }

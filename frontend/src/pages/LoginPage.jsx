@@ -1,228 +1,153 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
+import axiosClient from '../utils/axiosClient';
+import useAuthStore from '../store/useAuthStore';
+import { Mail, Lock, User, Loader2, ArrowLeft } from 'lucide-react';
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [shake, setShake] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  // Form states
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
 
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullName: '',
-  });
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleFocus = () => {
-    if (error) setError('');
-  };
-
-  const triggerShake = () => {
-    setShake(true);
-    setTimeout(() => setShake(false), 500);
-  };
-
-  // Hàm xử lý Form (Đã chuẩn bị sẵn cấu trúc cho Backend sau này)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    if (!formData.email || !formData.password || (!isLogin && !formData.fullName)) {
-      setError('Vui lòng nhập đầy đủ thông tin!');
-      triggerShake();
-      return;
-    }
-
+    setErrorMsg('');
     setLoading(true);
 
-    // GIẢ LẬP GỌI API (Mock API Call)
-    setTimeout(() => {
-      setLoading(false);
-      if (formData.email === "test@error.com") {
-        setError("Email hoặc mật khẩu không chính xác!");
-        triggerShake();
-        return;
-      }
-
+    try {
       if (isLogin) {
-        alert("🎉 Đăng nhập thành công! Chào mừng đến Story Vault.");
-        navigate('/'); // Về trang chủ
+        // GỌI API ĐĂNG NHẬP
+        const response = await axiosClient.post('/auth/signin', { email, password });
+        setAuth(response.user, response.accessToken);
+        navigate('/'); // Thành công -> Về trang chủ
       } else {
-        alert("✨ Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
-        setIsLogin(true); // Chuyển sang tab Đăng nhập
-        setFormData({ ...formData, password: '' });
+        // GỌI API ĐĂNG KÝ
+        const response = await axiosClient.post('/auth/register', { email, password, name });
+        setAuth(response.user, response.accessToken);
+        navigate('/'); // Thành công -> Về trang chủ
       }
-    }, 1500);
+    } catch (error) {
+      // Bắt lỗi từ Backend trả về (VD: Sai mật khẩu, email đã tồn tại)
+      setErrorMsg(error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại!');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-4 py-12 relative overflow-hidden font-sans">
-      
-      <div className="w-full max-w-md z-10">
-        
-        {/* Tiêu đề & Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 cursor-pointer transition-transform hover:scale-105">
-            <span className="text-4xl">📚</span>
-            <h1 className="text-3xl font-black text-amber-900 tracking-tight">Story Vault.</h1>
-          </Link>
-        </div>
+    <div className="min-h-screen bg-[#FDFBF7] font-sans flex items-center justify-center p-4 relative">
+      {/* Nút quay lại */}
+      <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 text-stone-500 hover:text-amber-800 transition-colors font-bold">
+        <ArrowLeft size={20} /> Về trang chủ
+      </Link>
 
-        {/* Nút Toggle Chuyển đổi Đăng nhập / Đăng ký */}
-        <div className="flex bg-amber-100 p-1.5 rounded-full mb-8 border border-amber-200 shadow-sm">
-          <button
-            onClick={() => { setIsLogin(true); setError(''); }}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${
-              isLogin ? 'bg-white text-amber-900 shadow-md' : 'text-amber-700 hover:text-amber-900'
-            }`}
-          >
-            Đăng nhập
-          </button>
-          <button
-            onClick={() => { setIsLogin(false); setError(''); }}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${
-              !isLogin ? 'bg-white text-amber-900 shadow-md' : 'text-amber-700 hover:text-amber-900'
-            }`}
-          >
-            Đăng ký
-          </button>
-        </div>
+      <div className="bg-white max-w-md w-full rounded-3xl shadow-xl border border-amber-100 overflow-hidden">
+        <div className="p-8 sm:p-10">
+          <div className="text-center mb-8">
+            <span className="text-4xl mb-2 block">📚</span>
+            <h1 className="text-3xl font-black text-stone-800 tracking-tight">Story Vault.</h1>
+            <p className="text-stone-500 font-medium mt-2">
+              {isLogin ? 'Mừng bạn quay trở lại kho lưu trữ!' : 'Tạo tài khoản để bắt đầu khám phá.'}
+            </p>
+          </div>
 
-        {/* Form Container với hiệu ứng Animation */}
-        <motion.div
-          key={isLogin ? 'login' : 'signup'}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            x: shake ? [0, -10, 10, -10, 10, 0] : 0,
-          }}
-          transition={{ duration: 0.3 }}
-          className="bg-white border border-amber-100 p-8 rounded-3xl shadow-sm"
-        >
-          <h2 className="text-2xl font-bold text-stone-800 mb-2 text-center">
-            {isLogin ? 'Chào mừng trở lại!' : 'Tạo tài khoản mới'}
-          </h2>
-          <p className="text-stone-500 text-center mb-6 text-sm">
-            {isLogin
-              ? 'Nhập thông tin để mở khóa kho lưu trữ'
-              : 'Trở thành thành viên của chúng tôi ngay hôm nay'}
-          </p>
-
-          {/* Hiển thị lỗi */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="border p-3 rounded-xl mb-6 text-sm flex items-center gap-2 font-medium bg-red-50 text-red-600 border-red-200"
-            >
-              <AlertCircle size={18} /> {error}
-            </motion.div>
+          {/* Hiển thị lỗi nếu có */}
+          {errorMsg && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-bold text-center">
+              {errorMsg}
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Input Họ Tên (Chỉ hiện khi Đăng ký) */}
+          <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div>
-                <label className="block text-stone-700 text-xs font-bold mb-1.5 uppercase ml-1">Họ và tên</label>
-                <div className="relative group">
+                <label className="block text-sm font-bold text-stone-700 mb-1.5">Tên hiển thị</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
+                    <User size={18} />
+                  </div>
                   <input
                     type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    onFocus={handleFocus}
-                    className="w-full bg-amber-50/50 border border-amber-200 group-hover:border-amber-300 rounded-xl py-3 pl-10 pr-4 text-stone-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all placeholder:text-stone-400"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                     placeholder="Nguyễn Văn A"
                   />
-                  <User className="absolute left-3 top-3 text-amber-600/70" size={18} />
                 </div>
               </div>
             )}
 
-            {/* Input Email */}
             <div>
-              <label className="block text-stone-700 text-xs font-bold mb-1.5 uppercase ml-1">Email</label>
-              <div className="relative group">
+              <label className="block text-sm font-bold text-stone-700 mb-1.5">Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
+                  <Mail size={18} />
+                </div>
                 <input
                   type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  onFocus={handleFocus}
-                  className={`w-full bg-amber-50/50 border ${error ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-amber-200 group-hover:border-amber-300 focus:border-amber-500 focus:ring-amber-200'} rounded-xl py-3 pl-10 pr-4 text-stone-800 focus:ring-2 outline-none transition-all placeholder:text-stone-400`}
-                  placeholder="name@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  placeholder="you@example.com"
                 />
-                <Mail className="absolute left-3 top-3 text-amber-600/70" size={18} />
               </div>
             </div>
 
-            {/* Input Mật khẩu */}
             <div>
-              <label className="block text-stone-700 text-xs font-bold mb-1.5 uppercase ml-1">Mật khẩu</label>
-              <div className="relative group">
+              <label className="block text-sm font-bold text-stone-700 mb-1.5">Mật khẩu</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
+                  <Lock size={18} />
+                </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  onFocus={handleFocus}
-                  className={`w-full bg-amber-50/50 border ${error ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-amber-200 group-hover:border-amber-300 focus:border-amber-500 focus:ring-amber-200'} rounded-xl py-3 pl-10 pr-10 text-stone-800 focus:ring-2 outline-none transition-all placeholder:text-stone-400`}
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
-                <Lock className="absolute left-3 top-3 text-amber-600/70" size={18} />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-stone-400 hover:text-stone-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
+              {isLogin && (
+                <div className="flex justify-end mt-2">
+                  <button type="button" className="text-sm font-bold text-amber-700 hover:text-amber-800">
+                    Quên mật khẩu?
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Nút Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-800 text-white font-bold py-3 rounded-xl hover:bg-amber-900 transition-all flex items-center justify-center gap-2 mt-6 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-stone-800 hover:bg-stone-900 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex justify-center items-center gap-2 disabled:bg-stone-400"
             >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Đang xử lý...
-                </>
-              ) : (
-                <>
-                  {isLogin ? 'Đăng nhập ngay' : 'Đăng ký tài khoản'}
-                  <ArrowRight size={18} />
-                </>
-              )}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? 'Đăng nhập' : 'Đăng ký')}
             </button>
           </form>
 
-          {isLogin && (
-            <div className="text-center mt-6">
-              <a href="#" className="text-sm font-semibold text-amber-700 hover:text-amber-900 transition-colors">
-                Quên mật khẩu?
-              </a>
-            </div>
-          )}
-        </motion.div>
-
-        <div className="text-center mt-8">
-          <Link to="/" className="text-stone-500 hover:text-amber-800 text-sm font-medium transition-colors inline-flex items-center gap-2">
-            &larr; Quay lại trang chủ
-          </Link>
+          <div className="mt-8 text-center text-sm font-medium text-stone-600">
+            {isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
+            <button 
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setErrorMsg('');
+              }} 
+              className="font-bold text-amber-700 hover:text-amber-800 underline decoration-amber-300 underline-offset-4"
+            >
+              {isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

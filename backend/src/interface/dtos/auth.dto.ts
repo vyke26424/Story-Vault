@@ -1,25 +1,29 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class Register {
-    @IsString()
-    @IsEmail()
-    @IsNotEmpty()
-    email : string
-    @IsString()
-    @IsNotEmpty()
-    password :string
-    @IsString()
-    @IsOptional()
-    name : string
+  @IsEmail({}, { message: 'Email không hợp lệ' })
+  email: string;
+
+  @IsString()
+  @MinLength(6, { message: 'Mật khẩu phải có ít nhất 6 ký tự' })
+  password: string;
+
+  @IsString()
+  @IsOptional()
+  name?: string;
 }
 
 export class SignIn {
-    @IsString()
-    @IsNotEmpty()
-    @IsEmail()
-    email : string
-    @IsString()
-    @IsNotEmpty()
-    password : string
-}
+  @IsEmail({}, { message: 'Email không hợp lệ' })
+  email: string;
 
+  @IsString()
+  @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
+  password: string;
+}

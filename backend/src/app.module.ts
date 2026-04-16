@@ -3,7 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/module/auth/auth.module';
+import { AuthModule } from './auth/module/auth.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 import jwtConfig from './config/jwt.config';
 
 
@@ -14,6 +15,7 @@ import jwtConfig from './config/jwt.config';
     }),
     PrismaModule,
     AuthModule,
+    CatalogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
