@@ -1,196 +1,184 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import useAuthStore from '../store/useAuthStore';
 import useCartStore from '../store/useCartStore';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { ChevronLeft, MapPin, Navigation, Trash2, CreditCard, ShieldCheck, X, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, CreditCard, Navigation } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Cập nhật: Hàm gọi API Nominatim để dịch Tọa độ -> Địa chỉ
+const fetchAddressFromCoords = async (lat, lng, setAddressInput) => {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+    const data = await res.json();
+    if (data && data.address) {
+      // Chỉ lấy số nhà, tên đường, phường/ấp (bỏ phần Tỉnh/Huyện vì đã có Dropdown)
+      const street = [data.address.house_number, data.address.road, data.address.quarter, data.address.suburb].filter(Boolean).join(', ');
+      // Nếu không trích xuất được chi tiết thì lấy chuỗi gốc
+      setAddressInput(street || data.display_name);
+    }
+  } catch (error) {
+    console.error("Lỗi khi lấy địa chỉ:", error);
+  }
+};
+
+// Component: Bắt sự kiện click trên bản đồ
+const LocationMarker = ({ position, setPosition, setAddressInput }) => {
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition([lat, lng]);
+      fetchAddressFromCoords(lat, lng, setAddressInput); // Dịch ra chữ ngay khi click
+    },
+  });
+  return position ? <Marker position={position}></Marker> : null;
+};
+
+// Component: Làm cho bản đồ "bay" mượt mà đến tọa độ mới
+const MapFlyTo = ({ center }) => {
+  const map = useMap();
+  useEffect(() => { map.flyTo(center, 16); }, [center, map]);
+  return null;
+};
 
 const CheckoutPage = () => {
+  const { user } = useAuthStore();
+  const { cart } = useCartStore();
+  const location = useLocation();
   const navigate = useNavigate();
-  const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCartStore();
+
+  const selectedIds = location.state?.selectedIds || [];
+  const checkoutItems = cart.filter(item => selectedIds.includes(item.id));
+  const totalPrice = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  useEffect(() => { if (checkoutItems.length === 0) navigate('/cart'); }, [checkoutItems, navigate]);
+
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedWard, setSelectedWard] = useState('');
   
-  const [isLocating, setIsLocating] = useState(false);
-  const [address, setAddress] = useState('');
-  const [showQRModal, setShowQRModal] = useState(false); // State bật/tắt Modal VietQR
+  // STATE MỚI: Quản lý ô nhập "Số nhà, Tên đường"
+  const [addressInput, setAddressInput] = useState('');
+  const [mapPosition, setMapPosition] = useState([10.8231, 106.6297]); 
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
-  const subtotal = getCartTotal();
-  const shippingFee = subtotal > 0 ? 2.50 : 0; 
-  const total = subtotal + shippingFee;
+  useEffect(() => { fetch('https://provinces.open-api.vn/api/p/').then(res => res.json()).then(data => setProvinces(data)); }, []);
+  useEffect(() => { if (selectedProvince) fetch(`https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`).then(res => res.json()).then(data => { setDistricts(data.districts); setWards([]); setSelectedDistrict(''); setSelectedWard(''); }); }, [selectedProvince]);
+  useEffect(() => { if (selectedDistrict) fetch(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`).then(res => res.json()).then(data => setWards(data.wards)); }, [selectedDistrict]);
 
-  // Giả lập dò tìm vị trí
-  const handleAutoLocate = () => {
-    setIsLocating(true);
-    setTimeout(() => {
-      setAddress("60-62 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh");
-      setIsLocating(false);
-    }, 1500);
+  // HÀM MỚI: Lấy vị trí GPS hiện tại của người dùng
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Trình duyệt của bạn không hỗ trợ định vị GPS.');
+      return;
+    }
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setMapPosition([latitude, longitude]); // Cắm ghim
+        fetchAddressFromCoords(latitude, longitude, setAddressInput); // Điền chữ
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        console.error("Lỗi khi lấy vị trí:", error);
+        alert('Vui lòng cho phép quyền truy cập vị trí trên trình duyệt để sử dụng tính năng này!');
+        setIsGettingLocation(false);
+      }
+    );
   };
 
-  // Nút Xác nhận đặt hàng (Mở Modal QR)
   const handlePlaceOrder = (e) => {
     e.preventDefault();
-    if (cart.length === 0) {
-      alert("Giỏ hàng của bạn đang trống!");
-      return;
-    }
-    if (!address) {
-      alert("Vui lòng nhập hoặc định vị địa chỉ giao hàng!");
-      return;
-    }
-    setShowQRModal(true); // Mở Modal VietQR
-  };
-
-  // Nút Tôi đã chuyển khoản (Xử lý dọn giỏ và chuyển trang)
-  const handlePaymentSuccess = () => {
-    clearCart();
-    navigate('/success');
+    alert(`Đã chốt đơn!\nĐịa chỉ: ${addressInput}\nTọa độ: ${mapPosition[0]}, ${mapPosition[1]}`);
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] font-sans flex flex-col relative">
-      <Header />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 bg-sv-cream min-h-screen">
+      <Link to="/cart" className="inline-flex items-center gap-2 text-gray-500 hover:text-sv-brown font-bold mb-6 transition-colors"><ArrowLeft size={20} /> Quay lại giỏ hàng</Link>
+      <h1 className="text-3xl font-black text-sv-brown mb-8 flex items-center gap-3"><Truck className="text-sv-tan" size={32} /> Hoàn tất đơn hàng</h1>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-        <Link to="/category" className="inline-flex items-center gap-2 text-stone-500 hover:text-amber-800 mb-6 transition-colors font-medium">
-          <ChevronLeft size={20} /> Tiếp tục mua sắm
-        </Link>
-
-        <div className="flex flex-col lg:flex-row gap-8">
+      <form onSubmit={handlePlaceOrder} className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1 space-y-6">
           
-          {/* --- CỘT TRÁI: FORM GIAO HÀNG & BẢN ĐỒ --- */}
-          <div className="w-full lg:w-3/5 space-y-6">
-            
-            {/* Box Bản đồ */}
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-amber-100">
-              <h2 className="text-xl font-bold text-stone-800 mb-6 flex items-center gap-2">
-                <MapPin className="text-amber-600" /> Vị trí giao hàng
-              </h2>
-
-              <div className="w-full h-64 bg-stone-100 rounded-2xl overflow-hidden mb-4 border border-stone-200 relative group">
-                <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4602324211116!2d106.6999201147183!3d10.776019492321484!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4728fba81b%3A0x8e8201b1e22066d7!2sSaigon%20Centre!5e0!3m2!1sen!2s!4v1689000000000!5m2!1sen!2s" 
-                  width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Map Picker"
-                ></iframe>
-                <div className="absolute inset-0 bg-amber-900/5 pointer-events-none group-hover:bg-transparent transition-colors"></div>
-              </div>
-
-              <div className="space-y-4">
-                <button 
-                  type="button" onClick={handleAutoLocate} disabled={isLocating}
-                  className="w-full py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
-                >
-                  {isLocating ? <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div> : <Navigation size={18} />}
-                  {isLocating ? "Đang dò tìm vệ tinh..." : "Sử dụng vị trí hiện tại của tôi"}
-                </button>
-
-                <div>
-                  <label className="block text-sm font-semibold text-stone-700 mb-2">Số nhà, Tên đường, Phường/Xã</label>
-                  <input 
-                    type="text" value={address} onChange={(e) => setAddress(e.target.value)}
-                    placeholder="VD: 123 Đường Sách, Phường Bình Duyệt..."
-                    className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-shadow" required
-                  />
-                </div>
-              </div>
+          <div className="bg-white border border-sv-tan rounded-3xl p-6 shadow-sm">
+            <h2 className="text-xl font-black text-sv-brown mb-4 border-b border-sv-pale pb-3">Thông tin người nhận</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className="block text-sm font-bold text-sv-brown mb-1.5">Họ và tên</label><input type="text" required defaultValue={user?.name || ''} className="w-full bg-sv-pale border border-sv-tan text-sv-brown rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sv-brown" placeholder="Nhập họ tên đầy đủ" /></div>
+              <div><label className="block text-sm font-bold text-sv-brown mb-1.5">Số điện thoại</label><input type="tel" required className="w-full bg-sv-pale border border-sv-tan text-sv-brown rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sv-brown" placeholder="Ví dụ: 0912345678" /></div>
             </div>
-
-            {/* Box Thông tin liên hệ */}
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-amber-100">
-               <h2 className="text-xl font-bold text-stone-800 mb-6 flex items-center gap-2">
-                <ShieldCheck className="text-amber-600" /> Thông tin người nhận
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-stone-700 mb-2">Họ và tên</label>
-                  <input type="text" className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Tên người nhận" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-stone-700 mb-2">Số điện thoại</label>
-                  <input type="tel" className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="0909 xxx xxx" />
-                </div>
-              </div>
-            </div>
-
           </div>
 
-          {/* --- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG --- */}
-          <div className="w-full lg:w-2/5">
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-amber-100 sticky top-24">
-              <h2 className="text-xl font-bold text-stone-800 mb-6 border-b border-amber-100 pb-4">Tóm tắt đơn hàng</h2>
+          <div className="bg-white border border-sv-tan rounded-3xl p-6 shadow-sm">
+            <h2 className="text-xl font-black text-sv-brown mb-4 border-b border-sv-pale pb-3">Địa chỉ giao hàng</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div><label className="block text-sm font-bold text-sv-brown mb-1.5">Tỉnh / Thành phố</label><select required value={selectedProvince} onChange={(e) => setSelectedProvince(e.target.value)} className="w-full bg-sv-pale border border-sv-tan text-sv-brown rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sv-brown"><option value="">Chọn Tỉnh/Thành</option>{provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</select></div>
+              <div><label className="block text-sm font-bold text-sv-brown mb-1.5">Quận / Huyện</label><select required value={selectedDistrict} onChange={(e) => setSelectedDistrict(e.target.value)} disabled={!selectedProvince} className="w-full bg-sv-pale border border-sv-tan text-sv-brown rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sv-brown disabled:opacity-50"><option value="">Chọn Quận/Huyện</option>{districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}</select></div>
+              <div><label className="block text-sm font-bold text-sv-brown mb-1.5">Phường / Xã</label><select required value={selectedWard} onChange={(e) => setSelectedWard(e.target.value)} disabled={!selectedDistrict} className="w-full bg-sv-pale border border-sv-tan text-sv-brown rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sv-brown disabled:opacity-50"><option value="">Chọn Phường/Xã</option>{wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}</select></div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-sv-brown mb-1.5">Số nhà, Tên đường</label>
+              <input type="text" required value={addressInput} onChange={(e) => setAddressInput(e.target.value)} className="w-full bg-sv-pale border border-sv-tan text-sv-brown rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sv-brown" placeholder="Số 123 Đường ABC... (Hoặc chọn trên bản đồ)" />
+            </div>
+          </div>
 
-              <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-amber-200">
-                {cart.length === 0 ? (
-                  <p className="text-stone-500 text-center py-8 italic">Giỏ hàng trống.</p>
-                ) : (
-                  cart.map((item, index) => (
-                    <div key={`${item.id}-${item.volume}-${index}`} className="flex gap-4 items-center bg-amber-50/50 p-3 rounded-2xl border border-amber-50">
-                      <img src={item.image} alt={item.title} className="w-16 h-20 object-cover rounded-lg shadow-sm" />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-stone-800 text-sm line-clamp-1">{item.title}</h4>
-                        <p className="text-xs text-amber-700 font-medium mb-2">{item.volume}</p>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center bg-white border border-amber-200 rounded-lg overflow-hidden h-7">
-                            <button onClick={() => updateQuantity(item.id, item.volume, item.quantity - 1)} className="px-2 text-stone-500 hover:bg-stone-100">-</button>
-                            <span className="w-6 text-center text-xs font-bold">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, item.volume, item.quantity + 1)} className="px-2 text-stone-500 hover:bg-stone-100">+</button>
-                          </div>
-                          <span className="font-black text-stone-800">${(item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <button onClick={() => removeFromCart(item.id, item.volume)} className="p-2 text-stone-400 hover:text-red-500 transition-colors">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="border-t border-amber-100 pt-4 space-y-3 mb-6 text-sm">
-                <div className="flex justify-between text-stone-600"><span>Tạm tính</span><span className="font-bold text-stone-800">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-stone-600"><span>Phí vận chuyển</span><span className="font-bold text-stone-800">{shippingFee > 0 ? `$${shippingFee.toFixed(2)}` : 'Miễn phí'}</span></div>
-                <div className="flex justify-between text-lg font-black text-amber-900 border-t border-amber-100 pt-3"><span>Tổng cộng</span><span>${total.toFixed(2)}</span></div>
-              </div>
-
-              <button onClick={handlePlaceOrder} className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md">
-                <CreditCard size={20} /> Xác nhận đặt hàng
+          <div className="bg-white border border-sv-tan rounded-3xl p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4 border-b border-sv-pale pb-3">
+              <h2 className="text-xl font-black text-sv-brown">Ghim vị trí trên bản đồ</h2>
+              {/* Nút Lấy Vị Trí Hiện Tại */}
+              <button type="button" onClick={handleGetCurrentLocation} disabled={isGettingLocation} className="text-sm font-bold bg-sv-wheat hover:bg-sv-tan text-sv-brown px-4 py-2 rounded-full flex items-center gap-2 transition-colors disabled:opacity-50">
+                <Navigation size={16}/> {isGettingLocation ? 'Đang định vị...' : 'Lấy vị trí của tôi'}
               </button>
             </div>
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-
-      {/* --- MODAL THANH TOÁN VIETQR --- */}
-      {showQRModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-900/60 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative animate-in fade-in zoom-in duration-300">
             
-            <button onClick={() => setShowQRModal(false)} className="absolute top-4 right-4 text-stone-400 hover:text-stone-800 transition-colors">
-              <X size={24} />
-            </button>
-
-            <div className="text-center mb-6 mt-2">
-              <h3 className="text-2xl font-black text-amber-900 mb-1">Thanh Toán VietQR</h3>
-              <p className="text-stone-500 text-sm">Quét mã bằng ứng dụng ngân hàng</p>
+            <div className="w-full h-[350px] rounded-2xl overflow-hidden border-2 border-sv-tan z-0 relative">
+              <MapContainer center={mapPosition} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%', zIndex: 1 }}>
+                <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <MapFlyTo center={mapPosition} />
+                <LocationMarker position={mapPosition} setPosition={setMapPosition} setAddressInput={setAddressInput} />
+              </MapContainer>
             </div>
-
-            <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 flex justify-center mb-6">
-              {/* Fake tỉ giá 1$ = 25,000đ để ra mã QR số tiền VND */}
-              <img src={`https://img.vietqr.io/image/970436-0123456789-compact2.png?amount=${Math.round(total * 25000)}&addInfo=StoryVault%20Order&accountName=STORY%20VAULT`} alt="VietQR Code" className="w-full h-auto rounded-xl shadow-sm" />
-            </div>
-
-            <div className="text-center mb-8">
-              <p className="text-stone-500 text-sm mb-1">Tổng thanh toán</p>
-              <p className="text-3xl font-black text-stone-900">${total.toFixed(2)}</p>
-            </div>
-
-            <button onClick={handlePaymentSuccess} className="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-4 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
-               Tôi đã chuyển khoản <CheckCircle size={20} />
-            </button>
+            <p className="text-xs text-gray-500 mt-2 font-medium">Bạn có thể dùng ngón tay kéo thả hoặc click vào bản đồ để chọn lại vị trí cho chính xác.</p>
           </div>
         </div>
-      )}
+
+        <div className="w-full lg:w-[360px] shrink-0">
+          <div className="bg-white border-2 border-sv-tan rounded-3xl p-6 sticky top-24 shadow-lg">
+            <h2 className="text-xl font-black text-sv-brown mb-4 border-b border-sv-tan pb-3 flex items-center gap-2"><CreditCard size={24} /> Đơn hàng ({checkoutItems.length} sp)</h2>
+            <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar space-y-4 mb-6">
+              {checkoutItems.map(item => (
+                <div key={item.id} className="flex gap-3">
+                  <img src={item.coverImage} alt={item.title} className="w-16 h-24 object-cover rounded-lg border border-sv-pale" />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sv-brown text-sm line-clamp-2 leading-snug">{item.title}</h4>
+                    <p className="text-xs text-gray-500 mt-1">SL: {item.quantity}</p>
+                    <p className="font-black text-sv-brown mt-1">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price * item.quantity)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-3 font-medium text-gray-600 border-t border-sv-pale pt-4 mb-4">
+              <div className="flex justify-between"><span>Tạm tính</span><span className="font-bold text-sv-brown">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalPrice)}</span></div>
+              <div className="flex justify-between"><span>Phí ship (Dự kiến)</span><span className="text-gray-400 italic">30.000 ₫</span></div>
+            </div>
+            <div className="flex justify-between items-center border-t border-sv-tan pt-4 mb-6">
+              <span className="text-lg font-bold text-sv-brown">Tổng cộng</span>
+              <span className="text-2xl font-black text-sv-brown">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalPrice + 30000)}</span>
+            </div>
+            <button type="submit" className="w-full bg-sv-brown text-white font-black py-4 rounded-xl transition-all shadow-md hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-0.5">Xác nhận Đặt hàng</button>
+          </div>
+        </div>
+
+      </form>
     </div>
   );
 };
