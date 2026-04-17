@@ -1,0 +1,90 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateOrderDto } from 'src/interface/dtos/order.dto';
+
+@Injectable()
+export class OrderService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createOrder(userId: string, dto: CreateOrderDto) {
+    // Sử dụng $transaction để đảm bảo mọi thao tác thành công 100% hoặc hoàn tác tất cả
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. KIỂM TRA & TRỪ SỐ LƯỢNG TỒN KHO
+      for (const item of dto.items) {
+        const volume = await tx.volume.findUnique({
+          where: { id: item.volumeId },
+        });
+
+        if (!volume) throw new BadRequestException(`Sản phẩm không tồn tại.`);
+        if (volume.stock < item.quantity) {
+          throw new BadRequestException(
+            `Sản phẩm "${volume.title}" không đủ số lượng trong kho.`,
+          );
+        }
+
+        // Trừ kho
+        await tx.volume.update({
+          where: { id: item.volumeId },
+          data: { stock: volume.stock - item.quantity },
+        });
+
+        // Tạo log lịch sử xuất kho (InventoryTransaction)
+        await tx.inventoryTransaction.create({
+          data: {
+            volumeId: item.volumeId,
+            type: 'EXPORT',
+            quantity: -item.quantity,
+            note: 'Xuất kho bán hàng',
+          },
+        });
+      }
+
+      // 2. LƯU ĐỊA CHỈ GIAO HÀNG (Address)
+      const address = await tx.address.create({
+        data: {
+          userId,
+          phone: dto.phone,
+          street: dto.street,
+          ward: dto.ward,
+          district: dto.district,
+          city: dto.city,
+        },
+      });
+
+      // 3. TẠO ĐƠN HÀNG (Order + OrderItem + Payment)
+      const order = await tx.order.create({
+        data: {
+          userId,
+          addressId: address.id,
+          totalAmount: dto.totalAmount,
+          shippingFee: dto.shippingFee,
+          finalAmount: dto.finalAmount,
+          note: dto.note,
+          status: 'PENDING',
+          // Tạo luôn danh sách sách (OrderItem)
+          items: {
+            create: dto.items.map((item) => ({
+              volumeId: item.volumeId,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+          },
+          // Tạo luôn thông tin thanh toán (Payment)
+          payment: {
+            create: {
+              method: dto.paymentMethod,
+              status: 'PENDING',
+            },
+          },
+        },
+        include: {
+          items: true,
+          payment: true,
+          address: true,
+        },
+      });
+
+      return order;
+    });
+  }
+}

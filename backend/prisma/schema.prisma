@@ -123,7 +123,7 @@ model Volume {
   publishDate   DateTime?
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
-  volumeNumber  Int
+  volumeNumber  Int      @default(1)
   updatedAt     DateTime @updatedAt
 
   cartItems     CartItem[]
