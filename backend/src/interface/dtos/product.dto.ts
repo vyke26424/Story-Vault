@@ -28,6 +28,14 @@ export class CreateSeriesDto {
     @IsOptional()
     coverImage?: string;
 
+    @IsString()
+    @IsOptional()
+    author : string
+
+    @IsString()
+    @IsOptional()
+    publisher : string
+
     @IsEnum(TypeEnum, { message: 'Kiểu truyện không hợp lệ' })
     @IsNotEmpty()
     type: TypeEnum;

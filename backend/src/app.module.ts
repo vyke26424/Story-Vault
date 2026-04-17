@@ -9,21 +9,27 @@ import jwtConfig from './config/jwt.config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 import { RolesGuard } from './auth/guard/roles.guard';
-import { ProductService } from './products/series/series.service';
+import { SeriesService } from './products/series/series.service';
 import { CategoryService } from './products/categories/category.service';
 import { CategoryController } from './products/categories/category.controller';
+import { SeriesController } from './products/series/series.controller';
+import { CloudinaryService } from './upload/cloudinary/cloudinary.service';
+import { CloudinaryModule } from './upload/cloudinary/cloudinary.module';
+import cloudinaryConfig from './config/cloudinary.config';
+
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, load: [jwtConfig]
+      isGlobal: true, load: [jwtConfig, cloudinaryConfig]
     }),
     PrismaModule,
     AuthModule,
     CatalogModule,
+    CloudinaryModule,
   ],
-  controllers: [AppController, CategoryController],
+  controllers: [AppController, CategoryController, SeriesController, ],
   providers: [AppService,
     {
       provide: APP_GUARD,
@@ -33,8 +39,8 @@ import { CategoryController } from './products/categories/category.controller';
       provide: APP_GUARD,
       useClass: RolesGuard
     },
-    ProductService,
-    CategoryService
+    SeriesService,
+    CategoryService,
   ],
 })
 export class AppModule { }

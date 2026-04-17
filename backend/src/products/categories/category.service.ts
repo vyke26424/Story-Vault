@@ -3,6 +3,7 @@ import { CreateCategoryDto, UpdateCategoryDto } from 'src/interface/dtos/product
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import slugify from 'slugify';
+import { generateSlug } from 'src/helper/gen_slug.helper';
 
 
 @Injectable()
@@ -10,7 +11,12 @@ export class CategoryService {
     constructor(private readonly prisma : PrismaService){}
 
     async createCategory(data : CreateCategoryDto){
-        let newSlug = data.slug ? data.slug :  slugify(
+        let newSlug = data.slug ? slugify(data.slug,{
+            lower : true,
+            strict : true,
+            locale : 'vi'
+        })
+         :  slugify(
             data.name, {
                 lower : true,
                 strict : true,
@@ -22,7 +28,7 @@ export class CategoryService {
             where : {slug : newSlug}
         });
         if(isExists) {
-            newSlug = this.generateSlug(newSlug);
+            newSlug = generateSlug(newSlug);
         }
         const newCategory = await this.prisma.category.create({
             data : {...data, slug : newSlug}
@@ -75,7 +81,7 @@ export class CategoryService {
                 
             });
             if(isExists) {
-                currentslug = this.generateSlug(currentslug);
+                currentslug = slugify(generateSlug(currentslug));
             }
         }
         return await this.prisma.category.update({
@@ -84,8 +90,5 @@ export class CategoryService {
         })
     }
 
-    generateSlug (slug : string) {
-        const short_randomUUID = crypto.randomUUID().split('-')[0];
-        return slug = `${slug}-${short_randomUUID}` ;
-    }
+    
 }
