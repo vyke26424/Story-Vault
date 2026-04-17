@@ -7,7 +7,8 @@ import SeriesDetailPage from './pages/SeriesDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import DashboardPage from './pages/admin/DashboardPage';
+import AdminLayout from './pages/admin/AdminLayout';
 
 
 
@@ -38,6 +39,9 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/series/:slug" element={<SeriesDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/admin" element={<AdminLayout />} />
+
 
 
           {/* CÁC TRANG CẦN BẢO VỆ SẼ ĐƯỢC BỌC BỞI <ProtectedRoute> */}
