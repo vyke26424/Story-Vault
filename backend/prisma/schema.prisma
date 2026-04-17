@@ -94,6 +94,8 @@ model Series {
   categories Category[]
   volumes      Volume[]
   reviews      Review[]
+
+  @@index([isActive, createdAt(sort: Desc)])
 }
 
 enum Type {
