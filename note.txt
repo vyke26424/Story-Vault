@@ -1,1 +1,4 @@
 + In Hóa Đơn điện tử
+
+Mới chỉnh lại tí ở phần schema, 
+viết hòm hòm cái series rồi, có up ảnh lên cloudinary rồi, anh bên React gọi thử xem, bên Postman gọi được rồi đấy, với update series mới viết service à, em đi mua đồ ăn nấu cơm rồi về viết tiếp controller 
