@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service'; // Chỉnh lại đường dẫn nếu cần
 
+
+
+// sửa lại một serie có thể thuộc nhiều category rồi 
 @Injectable()
 export class CatalogService {
   constructor(private readonly prisma: PrismaService) {}
@@ -16,7 +19,7 @@ export class CatalogService {
       take: 8, // Lấy 8 truyện mới nhất ra trang chủ
       orderBy: { createdAt: 'desc' },
       include: {
-        category: true,
+        categories: true,
         volumes: {
           take: 1, // Lấy tập đầu tiên
           orderBy: { title: 'asc' },
@@ -33,7 +36,7 @@ export class CatalogService {
     const series = await this.prisma.series.findUnique({
       where: { slug },
       include: {
-        category: true, // Lấy luôn thông tin danh mục
+        categories: true, // Lấy luôn thông tin danh mục
         volumes: {
           where: { isActive: true }, // Chỉ lấy các tập đang bán
           orderBy: { title: 'asc' }, // Sắp xếp theo tên tập (Tập 1, Tập 2...)

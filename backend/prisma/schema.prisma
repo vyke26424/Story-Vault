@@ -91,9 +91,7 @@ model Series {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  categoryId   String
-  category     Category @relation(fields: [categoryId], references: [id])
-
+  categories Category[]
   volumes      Volume[]
   reviews      Review[]
 }
@@ -125,6 +123,7 @@ model Volume {
   publishDate   DateTime?
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
+  volumeNumber  Int
   updatedAt     DateTime @updatedAt
 
   cartItems     CartItem[]

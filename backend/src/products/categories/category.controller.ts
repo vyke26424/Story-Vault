@@ -1,11 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto } from 'src/interface/dtos/product.dto';
+import { Roles } from 'src/decorator/roles/roles.decorator';
+import { Role } from '@prisma/client';
+import { Public } from 'src/decorator/public/public.decorator';
 
 @Controller('category')
 export class CategoryController {
     constructor(private readonly cateService : CategoryService){}
     
+    @Roles(Role.ADMIN)
     @Post()
     async createCategory(
         @Body() dto : CreateCategoryDto
@@ -17,6 +21,7 @@ export class CategoryController {
         }
     }
 
+    @Public()
     @Get()
     async getAllCategory () {
         const data = await this.cateService.getAllCategory();
@@ -26,6 +31,8 @@ export class CategoryController {
         }
     }
 
+
+    @Roles(Role.ADMIN)
     @Delete(':categoryId')
     async deleteCategory (
         @Param('categoryId') categoryId : string
@@ -37,6 +44,7 @@ export class CategoryController {
         }
     }
 
+    @Roles(Role.ADMIN)
     @Patch(':categoryId')
     async updateCategory(
         @Param('categoryId') categoryId : string,
