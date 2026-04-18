@@ -2,8 +2,10 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
+  Param,
   UnauthorizedException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
@@ -15,15 +17,11 @@ export class OrderPublicController {
 
   @Post()
   async createOrder(@Req() req: any, @Body() dto: CreateOrderDto) {
-    // Bao lô tất cả các trường hợp tên biến giải mã từ JWT Token
-    const userId = req.user?.id || req.user?.sub || req.user?.userId;
+    const userId = req.user?.id;
 
     if (!userId) {
-      // throw new UnauthorizedException(
-      //   'Token hợp lệ nhưng không tìm thấy ID người dùng bên trong!',
-      // );
       throw new UnauthorizedException(
-        'Ruột của Token hiện tại là: ' + JSON.stringify(req.user),
+        'Token hợp lệ nhưng không tìm thấy ID người dùng bên trong!',
       );
     }
 
@@ -31,6 +29,37 @@ export class OrderPublicController {
 
     return {
       message: 'Đặt hàng thành công!',
+      data: order,
+    };
+  }
+
+  @Get()
+  async getMyOrders(@Req() req: any) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('Yêu cầu đăng nhập để xem đơn hàng!');
+    }
+
+    const orders = await this.orderService.getMyOrders(userId);
+
+    return {
+      message: 'Lấy lịch sử đơn hàng thành công!',
+      data: orders, // Trả về biến data để Frontend hứng
+    };
+  }
+  @Get(':id')
+  async getOrderById(@Param('id') orderId: string, @Req() req: any) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('Yêu cầu đăng nhập!');
+    }
+
+    const order = await this.orderService.getOrderById(orderId, userId);
+
+    return {
+      message: 'Lấy chi tiết đơn hàng thành công!',
       data: order,
     };
   }

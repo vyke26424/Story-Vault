@@ -3,7 +3,6 @@ import useAuthStore from "../store/useAuthStore";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:3000",
-  // BẮT BUỘC CÓ DÒNG NÀY ĐỂ XỬ LÝ COOKIE (LOGOUT/REFRESH)
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

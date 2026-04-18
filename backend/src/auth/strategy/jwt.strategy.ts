@@ -17,11 +17,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  // FIX TẠI ĐÂY: Nhận payload (ruột token) và gom đúng chuẩn trả về cho các Controller xài
   async validate(payload: any) {
     return {
-      // Móc ID ra (bao lô tất cả các tên sếp có thể đặt ở AuthService)
-      id: payload.id || payload.sub || payload.userId,
+      id: payload.sub,
       role: payload.role,
     };
   }

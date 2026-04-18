@@ -10,6 +10,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardPage from "./pages/admin/DashboardPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import OrderSuccessPage from "./pages/OrderSuccessPage";
+import OrderHistoryPage from './pages/OrderHistoryPage';
+import InvoicePage from './pages/InvoicePage';
+
+
+
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -43,10 +48,10 @@ function App() {
             path="/order-success/:orderId"
             element={<OrderSuccessPage />}
           />
-          <Route
-            path="/profile/orders"
-            element={<div>Trang lịch sử đơn hàng (Comming Soon)</div>}
-          />
+          <Route path="/profile/orders" element={<OrderHistoryPage />} />
+          <Route path="/order/invoice/:id" element={<InvoicePage />} />
+
+          
 
           {/* CÁC TRANG CẦN BẢO VỆ SẼ ĐƯỢC BỌC BỞI <ProtectedRoute> */}
           <Route

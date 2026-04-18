@@ -116,7 +116,7 @@ export class AuthService {
       });
 
       const { accessToken, refreshToken: newRefreshToken } =
-        await this.generateToken(payload.userId, payload.role, device);
+        await this.generateToken(payload.sub, payload.role, device);
 
       return { accessToken, newRefreshToken };
     } catch (error) {
@@ -134,7 +134,7 @@ export class AuthService {
 
     const jti = crypto.randomUUID();
     const refreshToken = await this.jwtService.signAsync(
-      { userId, role, jti },
+      { sub: userId, role, jti },
       {
         expiresIn: this.config.jwt_refresh_expires as StringValue,
         secret: this.config.jwt_refresh,

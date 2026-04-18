@@ -87,4 +87,46 @@ export class OrderService {
       return order;
     });
   }
+
+  async getMyOrders(userId: string) {
+    return this.prisma.order.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        items: {
+          include: {
+            volume: true, // Lấy thông tin sách để hiển thị ảnh và tên
+          },
+        },
+        payment: true, // Lấy thông tin thanh toán để check xem là COD hay VIETQR
+      },
+      orderBy: {
+        createdAt: 'desc', // Sắp xếp đơn hàng mới nhất lên đầu
+      },
+    });
+  }
+
+  async getOrderById(orderId: string, userId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        id: orderId,
+        userId: userId, // Bảo mật: Chỉ lấy đơn của chính user này
+      },
+      include: {
+        items: {
+          include: { volume: true },
+        },
+        payment: true,
+        address: true, // Quan trọng: Phải móc address ra để in lên hóa đơn
+      },
+    });
+
+    if (!order) {
+      throw new BadRequestException(
+        'Không tìm thấy đơn hàng hoặc sếp không có quyền xem!',
+      );
+    }
+    return order;
+  }
 }
