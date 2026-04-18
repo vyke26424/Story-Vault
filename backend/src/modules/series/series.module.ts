@@ -3,8 +3,12 @@ import { SeriesService } from './series.service';
 import { SeriesPublicController } from './series.public.controller';
 import { SeriesAdminController } from './series.admin.controller';
 
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+
 @Module({
-  controllers: [SeriesPublicController, SeriesAdminController], // Khai báo cả 2 controller
+  imports: [CloudinaryModule],
+
+  controllers: [SeriesPublicController, SeriesAdminController],
   providers: [SeriesService],
 })
 export class SeriesModule {}

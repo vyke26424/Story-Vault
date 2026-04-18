@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import {
   BadRequestException,
   Injectable,
@@ -21,7 +25,10 @@ export class SeriesService {
     private readonly cloudService: CloudinaryService,
   ) {}
 
+  // ==========================================
   // CÁC HÀM DÀNH CHO KHÁCH MUA HÀNG (PUBLIC)
+  // ==========================================
+
   async getHomePageData() {
     const categories = await this.prisma.category.findMany({
       select: { id: true, name: true, slug: true },
@@ -29,6 +36,7 @@ export class SeriesService {
 
     const featuredSeries = await this.prisma.series.findMany({
       take: 8,
+      where: { isActive: true }, // Chỉ lấy truyện chưa bị xóa
       orderBy: { createdAt: 'desc' },
       include: {
         categories: true,
@@ -44,7 +52,7 @@ export class SeriesService {
 
   async getSeriesBySlug(slug: string) {
     const series = await this.prisma.series.findUnique({
-      where: { slug },
+      where: { slug, isActive: true }, // Chỉ xem được truyện chưa xóa
       include: {
         categories: true,
         volumes: {
@@ -60,11 +68,30 @@ export class SeriesService {
     return series;
   }
 
+  async getAllSeriesPublic() {
+    return await this.prisma.series.findMany({
+      where: { isActive: true }, // Khách chỉ thấy truyện đang bán
+      include: { categories: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // ==========================================
   // CÁC HÀM DÀNH CHO QUẢN TRỊ VIÊN (ADMIN)
+  // ==========================================
+
   async getAllSeriesForAdmin() {
     return await this.prisma.series.findMany({
       include: { categories: true },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getSeriesDeleted() {
+    return await this.prisma.series.findMany({
+      where: { isActive: false }, // Lấy các truyện đã bị Soft Delete
+      include: { categories: true },
+      orderBy: { updatedAt: 'desc' },
     });
   }
 
@@ -74,10 +101,10 @@ export class SeriesService {
         'Hiện tại không cho upload mà không có ảnh bìa',
       );
 
-    const cloudUploaded = await this.cloudService.uploadImage(
+    const cloudUploaded = (await this.cloudService.uploadImage(
       file,
       'story_vault/series',
-    );
+    )) as { secure_url: string };
     const secureUrl = cloudUploaded.secure_url;
     let currentslug = data.slug
       ? slugify(data.slug, { lower: true, strict: true, locale: 'vi' })
@@ -88,7 +115,7 @@ export class SeriesService {
     });
     if (slugIsExists) currentslug = generateSlug(currentslug);
 
-    const { categoryIds, ...resData } = data;
+    const { categoryIds, ...resData } = data as any;
     const validCategoryIds = Array.isArray(categoryIds)
       ? categoryIds
       : [categoryIds];
@@ -99,7 +126,9 @@ export class SeriesService {
           ...resData,
           slug: currentslug,
           coverImage: secureUrl,
-          categories: { connect: validCategoryIds.map((id) => ({ id: id })) },
+          categories: {
+            connect: validCategoryIds.map((id: string) => ({ id: id })),
+          },
         },
       });
       return newSerie;
@@ -119,12 +148,12 @@ export class SeriesService {
     data: UpdateSeriesDto,
     file?: Express.Multer.File,
   ) {
-    let newImageUrl = undefined;
+    let newImageUrl: string | undefined = undefined;
     if (file) {
-      const uploadedCloud = await this.cloudService.uploadImage(
+      const uploadedCloud = (await this.cloudService.uploadImage(
         file,
         'story_vault/series',
-      );
+      )) as { secure_url: string };
       newImageUrl = uploadedCloud.secure_url;
     }
 
@@ -141,7 +170,7 @@ export class SeriesService {
       if (slugIsExists) currentslug = generateSlug(currentslug);
     }
 
-    const { categoryIds, ...resData } = data;
+    const { categoryIds, ...resData } = data as any;
     const validCategoryIds = categoryIds
       ? Array.isArray(categoryIds)
         ? categoryIds
@@ -155,9 +184,37 @@ export class SeriesService {
         slug: data.slug ? currentslug : undefined,
         ...(newImageUrl ? { coverImage: newImageUrl } : {}),
         ...(validCategoryIds && {
-          categories: { set: validCategoryIds.map((catId) => ({ id: catId })) },
+          categories: {
+            set: validCategoryIds.map((catId: string) => ({ id: catId })),
+          },
         }),
       },
+    });
+  }
+
+  async deleteSeries(seriesId: string) {
+    const series = await this.prisma.series.findUnique({
+      where: { id: seriesId },
+    });
+    if (!series) throw new NotFoundException('Không tìm thấy truyện');
+
+    // Soft Delete: Chuyển isActive thành false thay vì xóa hẳn
+    return await this.prisma.series.update({
+      where: { id: seriesId },
+      data: { isActive: false },
+    });
+  }
+
+  async restoreSeries(seriesId: string) {
+    const series = await this.prisma.series.findUnique({
+      where: { id: seriesId },
+    });
+    if (!series) throw new NotFoundException('Không tìm thấy truyện');
+
+    // Khôi phục: Chuyển isActive lại thành true
+    return await this.prisma.series.update({
+      where: { id: seriesId },
+      data: { isActive: true },
     });
   }
 }

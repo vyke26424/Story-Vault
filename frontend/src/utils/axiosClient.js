@@ -1,97 +1,46 @@
-import axios from 'axios';
-import useAuthStore from '../store/useAuthStore';
-
-// Cấu hình Base URL chung
-const baseURL = 'http://localhost:3000';
+import axios from "axios";
+import useAuthStore from "../store/useAuthStore";
 
 const axiosClient = axios.create({
-  baseURL: baseURL,
-  headers: { 'Content-Type': 'application/json' },
+  baseURL: "http://localhost:3000",
+  // BẮT BUỘC CÓ DÒNG NÀY ĐỂ XỬ LÝ COOKIE (LOGOUT/REFRESH)
   withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// Request Interceptor
+// TỰ ĐỘNG GẮN TOKEN VÀO MỌI CHUYẾN XE GỬI ĐI
 axiosClient.interceptors.request.use(
   (config) => {
-    // Khớp với tên biến trong Zustand mới của chúng ta
-    const token = useAuthStore.getState().accessToken; 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // TRÚNG PHÓC: Lấy đúng tên biến accessToken từ kho của sếp
+    const accessToken = useAuthStore.getState().accessToken;
+
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    return Promise.reject(error);
+  },
 );
 
-// Response Interceptor
+// BẮT LỖI TRẢ VỀ TỪ BACKEND
 axiosClient.interceptors.response.use(
-  (response) => response.data, // Trả thẳng data ra ngoài cho tiện
-  async (error) => {
-    const originalRequest = error.config;
-
-    // --- 1. NẾU LỖI TỪ API SIGNIN/REGISTER THÌ BỎ QUA REFRESH ---
-    // (Lưu ý: Backend mới của ta dùng đường dẫn /auth/signin)
-    if (
-      error.response?.status === 401 &&
-      (originalRequest.url.includes('/auth/signin') || originalRequest.url.includes('/auth/register'))
-    ) {
-      return Promise.reject(error);
+  (response) => {
+    // Bóc sẵn lớp vỏ data cho sếp nhàn
+    if (response && response.data) {
+      return response.data;
     }
-
-    // --- LOG LỖI SERVER (500) ĐỂ DỄ DEBUG ---
-    if (error.response?.status === 500) {
-      console.error(
-        `🔥 Lỗi Server (500) tại ${originalRequest.url}:`,
-        error.response.data,
-      );
+    return response;
+  },
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.error("⛔ Lỗi 401: Token không hợp lệ hoặc đã hết hạn!");
+      // Nếu sau này sếp muốn hết hạn token thì tự văng ra trang Login, mở comment dòng dưới:
+      // useAuthStore.getState().logout();
     }
-
-    // --- 2. XỬ LÝ LỖI 503 (BẢO TRÌ) ---
-    if (error.response && error.response.status === 503) {
-      if (window.location.pathname !== '/maintenance') {
-        window.location.href = '/maintenance';
-      }
-      return new Promise(() => {}); // Treo promise để UI không giật cục
-    }
-
-    // --- 3. XỬ LÝ REFRESH TOKEN ---
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        console.log('⚠️ Token hết hạn! Đang gọi Refresh Token...');
-
-        const res = await axios.post(
-          `${baseURL}/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
-
-        // API backend mới trả về: { accessToken: "..." }
-        const newAccessToken = res.data.accessToken; 
-
-        // Cập nhật Token mới vào Zustand
-        useAuthStore.getState().setAccessToken(newAccessToken);
-
-        // Gắn token mới vào header của request hiện tại và default
-        axiosClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-
-        // Gọi lại request cũ
-        return axiosClient(originalRequest);
-        
-      } catch (refreshError) {
-        console.error('Phiên đăng nhập hết hạn hẳn:', refreshError);
-        useAuthStore.getState().logout(); // Đăng xuất khỏi Zustand
-
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-
-        return Promise.reject(refreshError);
-      }
-    }
-
     return Promise.reject(error);
   },
 );

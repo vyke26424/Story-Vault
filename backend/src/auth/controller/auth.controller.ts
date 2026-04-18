@@ -15,7 +15,6 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
   ) {
-
     const device = (req.headers['user-agent'] as string) || 'unknown';
     const data = await this.authService.register(dto, device);
 
@@ -49,12 +48,17 @@ export class AuthController {
     return { accessToken: data.accessToken, user: data.user };
   }
 
+  @Public()
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies['refreshToken'];
-    // Fix: Luôn clear cookie trước để đảm bảo khách văng ra khỏi phiên an toàn
     res.clearCookie('refreshToken');
-    await this.authService.logOut(refreshToken);
+
+    try {
+      if (refreshToken) await this.authService.logOut(refreshToken);
+    } catch (error) {
+      console.log('Bỏ qua lỗi logout do token không tồn tại trong DB');
+    }
 
     return { message: 'Đăng xuất thành công' };
   }

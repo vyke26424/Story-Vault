@@ -10,7 +10,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
-        const response = await axiosClient.get('/catalog/home');
+        const response = await axiosClient.get('/series/home');
         setData(response);
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu trang chủ:', error);

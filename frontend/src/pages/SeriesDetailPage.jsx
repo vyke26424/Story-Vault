@@ -16,8 +16,12 @@ const SeriesDetailPage = () => {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        const data = await axiosClient.get(`/catalog/series/${slug}`);
-        setSeries(data);
+        const res = await axiosClient.get(`/series/${slug}`);
+        
+        // Bóc tách lớp vỏ thông minh: Bất chấp axiosClient bọc bao nhiêu lớp data
+        const actualData = res.data?.data || res.data || res;
+        
+        setSeries(actualData);
       } catch (err) {
         console.error("Lỗi chi tiết:", err);
         setError('Không tìm thấy truyện hoặc có lỗi xảy ra!');
@@ -61,7 +65,10 @@ const SeriesDetailPage = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-sv-pale rounded-2xl border border-sv-tan">
             <div><p className="text-sm text-gray-500 font-medium">Tác giả</p><p className="font-bold text-sv-brown">{series.author || 'Đang cập nhật'}</p></div>
             <div><p className="text-sm text-gray-500 font-medium">Nhà xuất bản</p><p className="font-bold text-sv-brown">{series.publisher || 'Đang cập nhật'}</p></div>
-            <div><p className="text-sm text-gray-500 font-medium">Danh mục</p><p className="font-bold text-sv-brown">{series.category?.name}</p></div>
+            
+            {/* ĐÃ FIX: Chuyển category thành categories (lấy phần tử đầu tiên) */}
+            <div><p className="text-sm text-gray-500 font-medium">Danh mục</p><p className="font-bold text-sv-brown">{series.categories?.[0]?.name || 'Đang cập nhật'}</p></div>
+            
             <div><p className="text-sm text-gray-500 font-medium">Số tập</p><p className="font-bold text-sv-brown">{series.volumes?.length || 0} tập</p></div>
           </div>
           <div>

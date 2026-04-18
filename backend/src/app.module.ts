@@ -1,24 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/module/auth.module';
-//import { CatalogModule } from './modules/series/series.module';
-import jwtConfig from './config/jwt.config';
 import { APP_GUARD } from '@nestjs/core';
+
+// Guards & Configs
 import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 import { RolesGuard } from './auth/guard/roles.guard';
-import { SeriesService } from './products/series/series.service';
-//import { CategoryService } from './products/categories/category.service';
-//import { CategoryController } from './products/categories/category.controller';
-import { SeriesController } from './products/series/series.controller';
-//import { CloudinaryService } from './upload/cloudinary/cloudinary.service';
-//import { CloudinaryModule } from './upload/cloudinary/cloudinary.module';
-import { VolumesModule } from './products/volumes/volumes.module';
-import { OrderModule } from './modules/order/order.module';
+import jwtConfig from './config/jwt.config';
 import cloudinaryConfig from './config/cloudinary.config';
+
+// Feature Modules
+import { AuthModule } from './auth/module/auth.module';
+import { SeriesModule } from './modules/series/series.module';
+import { OrderModule } from './modules/order/order.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module'; // Đường dẫn Cloudinary chuẩn
+import { VolumesModule } from './products/volumes/volumes.module';
 
 @Module({
   imports: [
@@ -28,14 +26,18 @@ import cloudinaryConfig from './config/cloudinary.config';
     }),
     PrismaModule,
     AuthModule,
-   // CatalogModule,
-   // CloudinaryModule,
+    CloudinaryModule,
+    SeriesModule,
     OrderModule,
     VolumesModule,
   ],
-  controllers: [AppController,  SeriesController],
+  controllers: [
+    AppController,
+    // ĐÃ XÓA SeriesController ở đây vì nó được quản lý bên trong SeriesModule rồi
+  ],
   providers: [
     AppService,
+    // --- Lính gác toàn cục (Global Guards) ---
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -44,8 +46,7 @@ import cloudinaryConfig from './config/cloudinary.config';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-    SeriesService,
-  
+    // ĐÃ XÓA SeriesService ở đây vì nó được quản lý bên trong SeriesModule rồi
   ],
 })
 export class AppModule {}

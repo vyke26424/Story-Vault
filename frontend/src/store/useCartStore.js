@@ -44,7 +44,15 @@ const useCartStore = create(
       },
 
       removeMultipleFromCart: (volumeIds) => {
-        set({ cart: get().cart.filter((item) => !volumeIds.includes(item.id)) });
+        set({
+          cart: get().cart.filter((item) => !volumeIds.includes(item.id)),
+        });
+      },
+
+      removeSelectedItems: (selectedIds) => {
+        set({
+          cart: get().cart.filter((item) => !selectedIds.includes(item.id)),
+        });
       },
 
       updateQuantity: (volumeId, quantity) => {
