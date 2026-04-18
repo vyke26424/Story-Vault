@@ -87,7 +87,8 @@ const CheckoutPage = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const shippingFee = 30000;
+  // Sếp yêu cầu: Cứ có 2 món hàng trở lên là free ship
+  const shippingFee = checkoutItems.length >= 2 ? 0 : 30000;
   const finalAmount = totalPrice + shippingFee;
 
   // 👉 THÊM STATE BẢO VỆ: Đánh dấu đã đặt hàng thành công

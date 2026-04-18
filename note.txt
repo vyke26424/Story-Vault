@@ -2,3 +2,10 @@
 
 em viết gần như đủ endpoint cho series rồi, sáng anh gọi thử, sai hay còn thiếu gì nói em biết, sửa trong âm thầm chắc ị mất, em push lên đấy nhé, mai 
 có lổ thì chắc cherry pick lại được mà :v
+
+loại bỏ hoàn toàn refreshToken ra khỏi useAuthStore (Zustand/LocalStorage)
+Trước đây: Lưu Refresh Token ở LocalStorage rất dễ bị dính đòn tấn công XSS (Hacker chèn mã độc Javascript vào web để ăn cắp token).
+Khi chuyển sang cơ chế để Backend tự đọc/ghi refreshToken thông qua HttpOnly Cookie, 
+hacker có dùng JS trích xuất cỡ nào cũng không thể lấy được. Frontend giờ đây nhẹ gánh, chỉ việc gọi API 
+/auth/refresh và /auth/logout mà không cần mang theo payload.
+

@@ -129,4 +129,47 @@ export class OrderService {
     }
     return order;
   }
+  async getOrderStats(userId: string) {
+    // Dùng Promise.all để chạy 4 truy vấn song song cho tốc độ bàn thờ
+    const [pending, confirmed, shipping, delivered, cancelled, recentOrders] =
+      await Promise.all([
+        // Đổi tên biến latestOrder thành recentOrders
+        this.prisma.order.count({
+          where: { userId, status: 'PENDING' },
+        }),
+        this.prisma.order.count({
+          where: { userId, status: 'CONFIRMED' },
+        }),
+        this.prisma.order.count({
+          where: { userId, status: 'SHIPPING' },
+        }),
+        this.prisma.order.count({
+          where: { userId, status: 'DELIVERED' },
+        }),
+        this.prisma.order.count({
+          where: { userId, status: 'CANCELLED' },
+        }),
+        // Lấy 3 đơn hàng gần nhất với thông tin tối giản
+        this.prisma.order.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' }, // Lấy đơn mới nhất
+          take: 3,
+          select: {
+            id: true, // Chỉ lấy ID
+            status: true, // Trạng thái
+            finalAmount: true, // Tổng tiền
+            createdAt: true, // Ngày tạo
+          },
+        }),
+      ]);
+
+    return {
+      pending,
+      confirmed,
+      shipping,
+      delivered,
+      cancelled,
+      recentOrders,
+    };
+  }
 }

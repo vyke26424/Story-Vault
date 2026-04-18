@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 const useAuthStore = create(
   persist(
@@ -8,14 +8,22 @@ const useAuthStore = create(
       accessToken: null,
       isAuthenticated: false,
 
-      setAuth: (user, accessToken) => set({ user, accessToken, isAuthenticated: true }),
+      setAuth: (user, accessToken) =>
+        set({ user, accessToken, isAuthenticated: !!(user && accessToken) }),
+
       setAccessToken: (accessToken) => set({ accessToken }),
-      logout: () => set({ user: null, accessToken: null, isAuthenticated: false }),
+
+      logout: () =>
+        set({
+          user: null,
+          accessToken: null,
+          isAuthenticated: false,
+        }),
     }),
     {
-      name: 'storyvault-auth', // Tên lưu trong LocalStorage
-    }
-  )
+      name: "storyvault-auth",
+    },
+  ),
 );
 
 export default useAuthStore;

@@ -17,6 +17,7 @@ import { SeriesModule } from './modules/series/series.module';
 import { OrderModule } from './modules/order/order.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module'; // Đường dẫn Cloudinary chuẩn
 import { VolumesModule } from './products/volumes/volumes.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { VolumesModule } from './products/volumes/volumes.module';
     CloudinaryModule,
     SeriesModule,
     OrderModule,
+    UserModule,
     VolumesModule,
   ],
   controllers: [

@@ -48,6 +48,25 @@ export class OrderPublicController {
       data: orders, // Trả về biến data để Frontend hứng
     };
   }
+
+  // LƯU Ý: Endpoint có path tĩnh ('stats') phải được đặt TRƯỚC endpoint có path động (':id')
+  // để NestJS không hiểu nhầm 'stats' là một giá trị của 'id'
+  @Get('stats')
+  async getOrderStats(@Req() req: any) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('Yêu cầu đăng nhập!');
+    }
+
+    const stats = await this.orderService.getOrderStats(userId);
+
+    return {
+      message: 'Lấy thống kê đơn hàng thành công!',
+      data: stats,
+    };
+  }
+
   @Get(':id')
   async getOrderById(@Param('id') orderId: string, @Req() req: any) {
     const userId = req.user?.id;

@@ -10,11 +10,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardPage from "./pages/admin/DashboardPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import OrderSuccessPage from "./pages/OrderSuccessPage";
-import OrderHistoryPage from './pages/OrderHistoryPage';
-import InvoicePage from './pages/InvoicePage';
-
-
-
+import OrderHistoryPage from "./pages/OrderHistoryPage";
+import InvoicePage from "./pages/InvoicePage";
+import TokenExpiryPopup from "./components/TokenExpiryPopup";
+import ProfilePage from "./pages/ProfilePage";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -24,6 +23,9 @@ const Layout = ({ children }) => {
   return (
     <>
       {!isAuthPage && <Header />}
+
+      {/* Đặt popup cảnh báo token ở đây để nó áp dụng cho mọi page */}
+      <TokenExpiryPopup />
 
       {/* Nội dung các trang sẽ được render ở đây */}
       <main className="min-h-screen bg-sv-cream">{children}</main>
@@ -50,8 +52,7 @@ function App() {
           />
           <Route path="/profile/orders" element={<OrderHistoryPage />} />
           <Route path="/order/invoice/:id" element={<InvoicePage />} />
-
-          
+          <Route path="/profile" element={<ProfilePage />} />
 
           {/* CÁC TRANG CẦN BẢO VỆ SẼ ĐƯỢC BỌC BỞI <ProtectedRoute> */}
           <Route
