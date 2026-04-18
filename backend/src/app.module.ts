@@ -5,19 +5,22 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 
-// Guards & Configs
+
 import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 import { RolesGuard } from './auth/guard/roles.guard';
-import jwtConfig from './config/jwt.config';
-import cloudinaryConfig from './config/cloudinary.config';
 
-// Feature Modules
+
+
+import cloudinaryConfig from './config/cloudinary.config';
+import jwtConfig from './config/jwt.config';
 import { AuthModule } from './auth/module/auth.module';
 import { SeriesModule } from './modules/series/series.module';
 import { OrderModule } from './modules/order/order.module';
-import { CloudinaryModule } from './modules/cloudinary/cloudinary.module'; // Đường dẫn Cloudinary chuẩn
-import { VolumesModule } from './products/volumes/volumes.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module'; 
 import { UserModule } from './modules/user/user.module';
+import { VolumesModule } from './modules/volumes/volumes.module';
+
+
 
 @Module({
   imports: [
@@ -27,8 +30,8 @@ import { UserModule } from './modules/user/user.module';
     }),
     PrismaModule,
     AuthModule,
-    CloudinaryModule,
     SeriesModule,
+    CloudinaryModule,
     OrderModule,
     UserModule,
     VolumesModule,
