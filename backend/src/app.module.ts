@@ -11,15 +11,18 @@ import { RolesGuard } from './auth/guard/roles.guard';
 
 
 
+
+
+
+
+import { OrderModule } from './modules/order/order.module';
 import cloudinaryConfig from './config/cloudinary.config';
 import jwtConfig from './config/jwt.config';
 import { AuthModule } from './auth/module/auth.module';
-import { SeriesModule } from './modules/series/series.module';
-import { OrderModule } from './modules/order/order.module';
-import { CloudinaryModule } from './modules/cloudinary/cloudinary.module'; 
-import { UserModule } from './modules/user/user.module';
 import { VolumesModule } from './modules/volumes/volumes.module';
-
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { SeriesModule } from './modules/series/series.module';
+import { UserModule } from './modules/user/user.module';
 
 
 @Module({
@@ -30,19 +33,20 @@ import { VolumesModule } from './modules/volumes/volumes.module';
     }),
     PrismaModule,
     AuthModule,
+
     SeriesModule,
     CloudinaryModule,
     OrderModule,
     UserModule,
     VolumesModule,
+
+
   ],
   controllers: [
     AppController,
-    // ĐÃ XÓA SeriesController ở đây vì nó được quản lý bên trong SeriesModule rồi
   ],
   providers: [
     AppService,
-    // --- Lính gác toàn cục (Global Guards) ---
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -51,7 +55,7 @@ import { VolumesModule } from './modules/volumes/volumes.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-    // ĐÃ XÓA SeriesService ở đây vì nó được quản lý bên trong SeriesModule rồi
+ 
   ],
 })
 export class AppModule {}
