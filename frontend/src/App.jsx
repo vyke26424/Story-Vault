@@ -1,29 +1,27 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import HomePage from './pages/Home';
-import LoginPage from './pages/LoginPage';
-import SeriesDetailPage from './pages/SeriesDetailPage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import ProtectedRoute from './components/ProtectedRoute';
-import DashboardPage from './pages/admin/DashboardPage';
-import AdminLayout from './pages/admin/AdminLayout';
-
-
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import HomePage from "./pages/Home";
+import LoginPage from "./pages/LoginPage";
+import SeriesDetailPage from "./pages/SeriesDetailPage";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardPage from "./pages/admin/DashboardPage";
+import AdminLayout from "./pages/admin/AdminLayout";
+import OrderSuccessPage from "./pages/OrderSuccessPage";
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <>
       {!isAuthPage && <Header />}
-      
+
       {/* Nội dung các trang sẽ được render ở đây */}
-      <main className="min-h-screen bg-sv-cream">
-        {children}
-      </main>
+      <main className="min-h-screen bg-sv-cream">{children}</main>
 
       {!isAuthPage && <Footer />}
     </>
@@ -41,23 +39,25 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/admin" element={<AdminLayout />} />
-
-
+          <Route
+            path="/order-success/:orderId"
+            element={<OrderSuccessPage />}
+          />
+          <Route
+            path="/profile/orders"
+            element={<div>Trang lịch sử đơn hàng (Comming Soon)</div>}
+          />
 
           {/* CÁC TRANG CẦN BẢO VỆ SẼ ĐƯỢC BỌC BỞI <ProtectedRoute> */}
-          <Route 
-            path="/checkout" 
+          <Route
+            path="/checkout"
             element={
               <ProtectedRoute>
                 <CheckoutPage />
               </ProtectedRoute>
-            } 
+            }
           />
-
-          
         </Routes>
-
-        
       </Layout>
     </BrowserRouter>
   );
