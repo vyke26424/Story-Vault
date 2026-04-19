@@ -5,15 +5,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 
-
 import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 import { RolesGuard } from './auth/guard/roles.guard';
-
-
-
-
-
-
 
 import { OrderModule } from './modules/order/order.module';
 import cloudinaryConfig from './config/cloudinary.config';
@@ -25,6 +18,8 @@ import { SeriesModule } from './modules/series/series.module';
 import { UserModule } from './modules/user/user.module';
 import { SearchModule } from './modules/search/search.module';
 
+import { AdminModule } from './modules/admin/admin.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [
@@ -34,19 +29,16 @@ import { SearchModule } from './modules/search/search.module';
     }),
     PrismaModule,
     AuthModule,
-
+    AdminModule,
+    CategoryModule,
     SeriesModule,
     CloudinaryModule,
     OrderModule,
     UserModule,
     SearchModule,
     VolumesModule,
-
-
   ],
-  controllers: [
-    AppController,
-  ],
+  controllers: [AppController],
   providers: [
     AppService,
     {
@@ -57,7 +49,6 @@ import { SearchModule } from './modules/search/search.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
- 
   ],
 })
 export class AppModule {}

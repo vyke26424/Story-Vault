@@ -106,6 +106,7 @@ export class SeriesService {
       'story_vault/series',
     )) as { secure_url: string };
     const secureUrl = cloudUploaded.secure_url;
+
     let currentslug = data.slug
       ? slugify(data.slug, { lower: true, strict: true, locale: 'vi' })
       : slugify(data.title, { lower: true, strict: true, locale: 'vi' });
@@ -116,9 +117,12 @@ export class SeriesService {
     if (slugIsExists) currentslug = generateSlug(currentslug);
 
     const { categoryIds, ...resData } = data as any;
-    const validCategoryIds = Array.isArray(categoryIds)
-      ? categoryIds
-      : [categoryIds];
+
+    const validCategoryIds = categoryIds
+      ? Array.isArray(categoryIds)
+        ? categoryIds
+        : [categoryIds]
+      : [];
 
     try {
       const newSerie = await this.prisma.series.create({
@@ -126,9 +130,11 @@ export class SeriesService {
           ...resData,
           slug: currentslug,
           coverImage: secureUrl,
-          categories: {
-            connect: validCategoryIds.map((id: string) => ({ id: id })),
-          },
+          ...(validCategoryIds.length > 0 && {
+            categories: {
+              connect: validCategoryIds.map((id: string) => ({ id: id })),
+            },
+          }),
         },
       });
       return newSerie;

@@ -9,9 +9,9 @@ import {
   IsOptional,
   IsString,
   Min,
-  IsNumber,
-  IsDateString,
 } from 'class-validator';
+// 👉 IMPORT THÊM 2 ÔNG NÀY ĐỂ ÉP KIỂU DỮ LIỆU TỪ FORMDATA
+import { Transform, Type } from 'class-transformer';
 
 // ==========================================
 // SERIES DTO
@@ -49,19 +49,28 @@ export class CreateSeriesDto {
   @IsNotEmpty()
   status!: StatusEnum;
 
+  // 👉 ĐÃ FIX: Ép chuỗi "10" (từ FormData) thành số 10
+  @Type(() => Number)
   @IsInt()
   @Min(0)
   @IsOptional()
   totalVolumes?: number;
 
+  // 👉 ĐÃ FIX: Ép chuỗi "true"/"false" (từ FormData) thành boolean thật
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
 
+  // 👉 LƯU Ý: Tạm thời để Optional vì Frontend sếp chưa làm chức năng chọn Thể loại
   @IsArray()
   @IsString({ each: true })
-  @IsNotEmpty({ message: 'Truyện phải có ít nhất 1 thể loại' })
-  categoryIds!: string[];
+  @IsOptional()
+  categoryIds?: string[];
 }
 
 export class UpdateSeriesDto extends PartialType(CreateSeriesDto) {}
@@ -84,4 +93,3 @@ export class CreateCategoryDto {
 }
 
 export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {}
-

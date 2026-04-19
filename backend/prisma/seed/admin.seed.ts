@@ -16,7 +16,7 @@ async function main() {
     },
     create: {
       email: adminName,
-      name: 'Nguyễn Lê Tứ',
+      name: 'Anh Vyke Admin',
       password: hashPassword,
       role: Role.ADMIN,
     },

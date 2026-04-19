@@ -172,4 +172,76 @@ export class OrderService {
       recentOrders,
     };
   }
+
+  // ==========================================
+  // CÁC HÀM DÀNH CHO ADMIN
+  // ==========================================
+
+  async getAllOrdersForAdmin() {
+    return this.prisma.order.findMany({
+      include: {
+        user: { select: { name: true, email: true } },
+        payment: true,
+        address: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateOrderStatusByAdmin(orderId: string, newStatus: any) {
+    // 1. Phải include items để lát nữa biết đường mà cộng lại kho
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      throw new BadRequestException('Không tìm thấy đơn hàng này!');
+    }
+
+    // 2. KHIÊN BẢO VỆ: Chặn đổi trạng thái nếu đơn đã HỦY hoặc đã GIAO
+    if (order.status === 'CANCELLED') {
+      throw new BadRequestException('Đơn hàng đã HỦY');
+    }
+    if (order.status === 'DELIVERED') {
+      throw new BadRequestException('Đơn hàng đã GIAO THÀNH CÔNG');
+    }
+
+    // 3. NẾU ADMIN BẤM HỦY ĐƠN -> Hoàn kho & Ghi log (Dùng Transaction để an toàn tuyệt đối)
+    if (newStatus === 'CANCELLED') {
+      return await this.prisma.$transaction(async (tx) => {
+        // 3.1. Cập nhật trạng thái thành CANCELLED
+        const cancelledOrder = await tx.order.update({
+          where: { id: orderId },
+          data: { status: newStatus },
+        });
+
+        // 3.2. Vòng lặp cộng lại kho cho từng cuốn sách
+        for (const item of order.items) {
+          await tx.volume.update({
+            where: { id: item.volumeId },
+            // Dùng increment để cộng dồn vào số lượng kho hiện tại
+            data: { stock: { increment: item.quantity } },
+          });
+
+          // 3.3. Ghi lại lịch sử để Admin kiểm toán sau này
+          await tx.inventoryTransaction.create({
+            data: {
+              volumeId: item.volumeId,
+              type: 'IMPORT', // Nhập lại vào kho
+              quantity: item.quantity,
+              note: `Hoàn kho do Hủy đơn hàng #${orderId.substring(0, 8)}`,
+            },
+          });
+        }
+        return cancelledOrder;
+      });
+    }
+
+    // 4. Nếu là các trạng thái khác (PENDING -> CONFIRMED -> SHIPPING) thì cứ update bình thường
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: newStatus },
+    });
+  }
 }

@@ -1,19 +1,24 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import useAuthStore from '../store/useAuthStore';
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import useAuthStore from "../store/useAuthStore";
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  const location = useLocation(); // Lấy đường dẫn hiện tại mà khách đang cố vào
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const { isAuthenticated, user } = useAuthStore();
 
-  // Nếu chưa đăng nhập -> Đá về trang /login
-  // Kèm theo cái "vé" ghi nhớ đường dẫn cũ (state: { from: location })
+  // 1. NẾU CHƯA ĐĂNG NHẬP -> Đá về trang Login
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Đã đăng nhập -> Mời vào trong
-  return children;
+  // 2. NẾU CÓ YÊU CẦU QUYỀN (Ví dụ: ADMIN) MÀ USER KHÔNG ĐỦ QUYỀN -> Đá về Trang chủ
+  if (requiredRole && user?.role !== requiredRole) {
+    return <Navigate to="/" replace />;
+  }
+
+  // 3. RENDER NỘI DUNG NẾU QUA ĐƯỢC BẢO VỆ
+  // - Hỗ trợ cả cách bọc cũ: <ProtectedRoute><Page /></ProtectedRoute> (children)
+  // - Hỗ trợ cả cách bọc mới: <Route element={<ProtectedRoute />}> (Outlet)
+  return children ? children : <Outlet />;
 };
 
 export default ProtectedRoute;

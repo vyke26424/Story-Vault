@@ -176,15 +176,15 @@ const CheckoutPage = () => {
       ward: wardName,
       district: districtName,
       city: provinceName,
-      totalAmount: totalPrice,
-      shippingFee: shippingFee,
-      finalAmount: finalAmount,
+      totalAmount: Number(totalPrice),
+      shippingFee: Number(shippingFee),
+      finalAmount: Number(finalAmount),
       note: note,
       paymentMethod: paymentMethod,
       items: checkoutItems.map((item) => ({
         volumeId: item.id,
-        quantity: item.quantity,
-        price: item.price,
+        quantity: Number(item.quantity),
+        price: Number(item.price),
       })),
     };
 
