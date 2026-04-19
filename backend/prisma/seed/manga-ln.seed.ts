@@ -44,7 +44,7 @@ export async function seedMangaAndLN(prisma: PrismaClient, categories: any[]) {
   }
 
   // 2. Tạo 10 Light Novel
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 15; i++) {
     const title = `Light Novel Tuyệt Đỉnh ${i}`;
     await prisma.series.create({
       data: {

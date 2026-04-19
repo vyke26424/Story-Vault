@@ -17,6 +17,7 @@ import OrderHistoryPage from "./pages/OrderHistoryPage";
 import InvoicePage from "./pages/InvoicePage";
 import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
+import CatalogPage from "./pages/CatalogPage";
 
 // Import Admin
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -70,6 +71,8 @@ function App() {
           <Route path="/series/:slug" element={<SeriesDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/catalog" element={<CatalogPage />} />
+
 
           {/* Các trang BẮT BUỘC ĐĂNG NHẬP (Chỉ dành cho Customer) */}
           <Route element={<ProtectedRoute />}>

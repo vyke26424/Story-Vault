@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Search,
   LayoutGrid,
+  BookOpen,
   Loader2,
 } from "lucide-react";
 import useCartStore from "../store/useCartStore";
@@ -104,8 +105,11 @@ const Header = () => {
         <div className="flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
           {/* Khu vực Logo & Nút Danh Mục */}
           <div className="flex items-center gap-4 shrink-0">
+            {/* ĐÃ FIX: Logo mới đồng bộ với trang Login */}
             <Link to="/" className="flex items-center gap-2 cursor-pointer">
-              <span className="text-3xl">📚</span>
+              <div className="w-9 h-9 bg-sv-pale rounded-xl flex items-center justify-center text-sv-brown border border-sv-tan">
+                <BookOpen size={20} strokeWidth={2.5} />
+              </div>
               <h1 className="text-2xl font-black text-sv-brown tracking-tight hidden sm:block">
                 Story Vault.
               </h1>
@@ -125,37 +129,45 @@ const Header = () => {
                 <div className="absolute top-full left-0 mt-3 w-56 bg-white border border-sv-tan rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="p-3 bg-sv-wheat/30 border-b border-sv-pale">
                     <h3 className="font-black text-sv-brown text-sm uppercase tracking-wider">
-                      Danh mục
+                      Phân Loại
                     </h3>
                   </div>
                   <div className="p-2 space-y-1">
+                    {/* ĐÃ FIX: Chuyển hướng sang trang /catalog kèm tham số type */}
                     <Link
-                      to="/search?category=manga"
+                      to="/catalog?type=MANGA"
                       onClick={() => setIsCategoryOpen(false)}
                       className="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-sv-wheat hover:text-sv-brown rounded-xl transition-colors"
                     >
                       Manga
                     </Link>
                     <Link
-                      to="/search?category=light-novel"
+                      to="/catalog?type=LIGHT_NOVEL"
                       onClick={() => setIsCategoryOpen(false)}
                       className="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-sv-wheat hover:text-sv-brown rounded-xl transition-colors"
                     >
                       Light Novel
                     </Link>
                     <Link
-                      to="/search?category=comic"
+                      to="/catalog?type=NOVEL"
                       onClick={() => setIsCategoryOpen(false)}
                       className="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-sv-wheat hover:text-sv-brown rounded-xl transition-colors"
                     >
-                      Comic & Đồ chơi
+                      Tiểu thuyết (Novel)
                     </Link>
                     <Link
-                      to="/search?category=novel"
+                      to="/catalog?type=COMIC"
                       onClick={() => setIsCategoryOpen(false)}
                       className="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-sv-wheat hover:text-sv-brown rounded-xl transition-colors"
                     >
-                      Tiểu thuyết
+                      Comic
+                    </Link>
+                    <Link
+                      to="/catalog?type=BOOK"
+                      onClick={() => setIsCategoryOpen(false)}
+                      className="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-sv-wheat hover:text-sv-brown rounded-xl transition-colors"
+                    >
+                      Sách
                     </Link>
                   </div>
                 </div>
@@ -202,13 +214,7 @@ const Header = () => {
                     {searchResults.map((item) => (
                       <Link
                         key={item.id}
-                        // SỬA LỖI: Luôn trỏ về trang của cả bộ truyện (series)
-                        // để đồng bộ với trang SearchPage
-                        to={
-                          item.series?.slug
-                            ? `/series/${item.series.slug}`
-                            : `/volume/${item.id}`
-                        }
+                        to={`/series/${item.series?.slug || item.slug}`}
                         onClick={() => setShowSearchDropdown(false)}
                         className="flex items-center gap-4 p-3 hover:bg-sv-pale border-b border-sv-pale transition-colors last:border-0"
                       >

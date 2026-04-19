@@ -15,18 +15,14 @@ export class SearchController {
     };
   }
 
-  // Đón API: GET /search?q=...&sort=...&type=...
   @Get()
-  async getFullSearch(
-    @Query('q') q: string,
-    @Query('sort') sort: string,
-    @Query('type') type: string,
-  ) {
-    const data = await this.searchService.getFullSearch(q, sort, type);
+  async getFullSearch(@Query() query: any) {
+    const result = await this.searchService.getFullSearch(query);
+
+    // Biến result bây giờ đã là 1 Object chứa cả { data, meta }
     return {
       message: 'Tìm kiếm thành công',
-      data: data,
-      total: data.length,
+      data: result, // Ném nguyên cục này cho Frontend tự bóc tách
     };
   }
 }

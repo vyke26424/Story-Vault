@@ -37,7 +37,8 @@ axiosClient.interceptors.response.use(
     // 1. NẾU LỖI LÀ TỪ TRANG LOGIN HOẶC LOGOUT -> BỎ QUA (Để Frontend tự báo lỗi sai pass)
     if (
       error.response?.status === 401 &&
-      (originalRequest.url.includes("/auth/login") ||
+      (originalRequest.url.includes("/auth/signin") ||
+        originalRequest.url.includes("/auth/register") ||
         originalRequest.url.includes("/auth/logout"))
     ) {
       return Promise.reject(error);

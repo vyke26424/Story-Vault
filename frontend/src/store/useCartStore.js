@@ -8,35 +8,36 @@ const useCartStore = create(
       cart: [],
 
       // Hàm xử lý Thêm vào giỏ
-      addToCart: (volume) => {
-        const currentCart = get().cart;
-        // Kiểm tra xem tập truyện này đã có trong giỏ chưa
-        const existingItem = currentCart.find((item) => item.id === volume.id);
+      addToCart: (product) =>
+        set((state) => {
+          const existingItem = state.cart.find(
+            (item) => item.id === product.id,
+          );
 
-        if (existingItem) {
-          // Nếu có rồi, kiểm tra xem số lượng mua có vượt quá hàng trong kho không
-          if (existingItem.quantity >= volume.stock) {
+          // Bắt lấy số lượng khách chọn truyền vào (mặc định là 1 nếu không có)
+          const qtyToAdd = product.quantity || 1;
+
+          if (existingItem) {
+            // Nếu đã có trong giỏ -> Cộng dồn số lượng hiện có VỚI số lượng khách vừa chọn
+            // Đồng thời chặn không cho vượt quá hàng tồn kho (stock)
             return {
-              success: false,
-              message: "Số lượng mua đã đạt giới hạn kho!",
+              cart: state.cart.map((item) => {
+                if (item.id === product.id) {
+                  const newQuantity = item.quantity + qtyToAdd;
+                  return {
+                    ...item,
+                    quantity:
+                      newQuantity > item.stock ? item.stock : newQuantity, // Chặn max stock
+                  };
+                }
+                return item;
+              }),
             };
           }
 
-          // Tăng số lượng lên 1
-          set({
-            cart: currentCart.map((item) =>
-              item.id === volume.id
-                ? { ...item, quantity: item.quantity + 1 }
-                : item,
-            ),
-          });
-          return { success: true, message: "Đã tăng số lượng trong giỏ!" };
-        } else {
-          // Nếu chưa có, thêm mới với số lượng (quantity) = 1
-          set({ cart: [...currentCart, { ...volume, quantity: 1 }] });
-          return { success: true, message: "Đã thêm truyện vào giỏ hàng!" };
-        }
-      },
+          // Nếu chưa có trong giỏ -> Thêm mới với đúng số lượng khách chọn
+          return { cart: [...state.cart, { ...product, quantity: qtyToAdd }] };
+        }),
 
       // Các hàm phụ trợ (Dành cho trang Giỏ hàng sau này)
       removeFromCart: (volumeId) => {

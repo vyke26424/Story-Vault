@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { Public } from 'src/decorator/public/public.decorator';
 
@@ -22,7 +22,11 @@ export class SeriesPublicController {
     const data = await this.seriesService.getAllSeriesPublic();
     return { message: 'Lấy danh sách truyện thành công', data };
   }
-
+  @Get('catalog')
+  async getCatalog(@Query() query: any) {
+    const data = await this.seriesService.getCatalog(query);
+    return { message: 'Lấy dữ liệu Catalog thành công', data };
+  }
   @Public()
   @Get(':slug')
   async getSeriesDetail(@Param('slug') slug: string) {

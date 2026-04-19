@@ -19,18 +19,20 @@ export class SearchService {
       where: {
         isActive: true,
         AND: [
-          searchString ? {
-            OR: [
-              { title: { contains: searchString } },
-              { series: { title: { contains: searchString } } },
-            ],
-          } : {},
+          searchString
+            ? {
+                OR: [
+                  { title: { contains: searchString } },
+                  { series: { title: { contains: searchString } } },
+                ],
+              }
+            : {},
           volumeNumber ? { volumeNumber: volumeNumber } : {},
         ],
       },
       include: {
         series: {
-          select: { title: true, author: true },
+          select: { title: true, author: true, slug: true },
         },
       },
       take: 5,
@@ -38,18 +40,14 @@ export class SearchService {
     });
   }
 
-  /**
-   * 2. FULL SEARCH (Kết quả chi tiết tại SearchPage)
-   * Hỗ trợ: Từ khóa, Thể loại, Khoảng giá, Sắp xếp
-   */
-  async getFullSearch(
-    q: string,
-    sort: string,
-    type: string,
-    minPrice?: number,
-    maxPrice?: number,
-  ) {
-    const { searchString, price: parsedPrice, volumeNumber } = this.parseSmartQuery(q || "");
+  async getFullSearch(query: any) {
+    // 1. Lấy tất cả tham số từ Frontend gửi lên
+    const { q, sort, type, minPrice, maxPrice, page = 1, limit = 12 } = query;
+    const {
+      searchString,
+      price: parsedPrice,
+      volumeNumber,
+    } = this.parseSmartQuery(q || '');
 
     // Khởi tạo điều kiện lọc
     const where: Prisma.VolumeWhereInput = {
@@ -70,19 +68,27 @@ export class SearchService {
       });
     }
 
-    // Lọc theo Số tập (Nếu khách gõ số nhỏ trong ô search)
+    // Lọc theo Số tập
     if (volumeNumber) {
       andConditions.push({ volumeNumber: volumeNumber });
     }
 
-    // Lọc theo Thể loại (MANGA, LIGHT_NOVEL...)
+    // Lọc theo Thể loại
     if (type) {
       andConditions.push({ series: { type: type as any } });
     }
 
-    // Lọc theo Khoảng giá (Ưu tiên giá từ bộ lọc Sidebar, sau đó đến giá trong ô search)
-    const finalMin = minPrice ? Number(minPrice) : (parsedPrice ? parsedPrice - 5000 : undefined);
-    const finalMax = maxPrice ? Number(maxPrice) : (parsedPrice ? parsedPrice + 5000 : undefined);
+    // Lọc theo Khoảng giá
+    const finalMin = minPrice
+      ? Number(minPrice)
+      : parsedPrice
+        ? parsedPrice - 5000
+        : undefined;
+    const finalMax = maxPrice
+      ? Number(maxPrice)
+      : parsedPrice
+        ? parsedPrice + 5000
+        : undefined;
 
     if (finalMin || finalMax) {
       andConditions.push({
@@ -98,15 +104,33 @@ export class SearchService {
     if (sort === 'price_asc') orderBy = { price: 'asc' };
     if (sort === 'price_desc') orderBy = { price: 'desc' };
 
-    return this.prisma.volume.findMany({
-      where,
-      include: {
-        series: {
-          select: { title: true, author: true, type: true },
+    const currentPage = Number(page);
+    const take = Number(limit);
+    const skip = (currentPage - 1) * take;
+
+    const [totalItems, data] = await Promise.all([
+      this.prisma.volume.count({ where }),
+      this.prisma.volume.findMany({
+        where,
+        include: {
+          series: {
+            select: { title: true, author: true, type: true, slug: true }, // Nhớ lấy slug để frontend link cho chuẩn
+          },
         },
+        orderBy,
+        skip,
+        take,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        totalItems,
+        currentPage,
+        totalPages: Math.ceil(totalItems / take),
       },
-      orderBy,
-    });
+    };
   }
 
   /**

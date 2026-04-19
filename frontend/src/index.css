@@ -14,3 +14,12 @@
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {
   background: #d4d4d8; /* Hiện mờ mờ khi rê chuột vào */
 }
+
+.hide-arrows::-webkit-outer-spin-button,
+.hide-arrows::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.hide-arrows {
+  -moz-appearance: textfield;
+}
