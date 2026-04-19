@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import {
   Camera,
@@ -17,7 +17,11 @@ import {
 import axiosClient from "../utils/axiosClient";
 
 const ProfilePage = () => {
-  const { user, setAuth, accessToken } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const fileInputRef = useRef(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -69,22 +73,26 @@ const ProfilePage = () => {
 
   const handleSaveInfo = async (e) => {
     e.preventDefault();
+    setIsSavingInfo(true);
     try {
-      setIsSavingInfo(true);
       // Gọi API và lấy về data user mới nhất từ backend
-      const response = await axiosClient.put("/user/profile", {
+      await axiosClient.put("/user/profile", {
         name: formData.name,
       });
-      const updatedUser = response.data.data; // Backend trả về { message, data: user }
 
-      alert("Cập nhật thông tin thành công!");
-      setAuth(updatedUser, accessToken); // Dùng user mới nhất (trong `data`) để cập nhật store
+      alert("Cập nhật thành công! Vui lòng đăng nhập lại.");
+      try {
+        await axiosClient.post("/auth/logout");
+      } catch (logoutError) {
+        console.error("Lỗi khi gọi API logout, bỏ qua.", logoutError);
+      }
+      logout();
+      navigate("/login");
     } catch (error) {
       alert(
         error.response?.data?.message ||
           "Có lỗi xảy ra khi cập nhật thông tin!",
       );
-    } finally {
       setIsSavingInfo(false);
     }
   };
@@ -114,6 +122,38 @@ const ProfilePage = () => {
     }
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileData = new FormData();
+    fileData.append("file", file);
+
+    try {
+      setIsUploadingAvatar(true);
+      await axiosClient.post("/user/avatar", fileData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("Cập nhật thành công! Vui lòng đăng nhập lại.");
+      try {
+        await axiosClient.post("/auth/logout");
+      } catch (logoutError) {
+        console.error("Lỗi khi gọi API logout, bỏ qua.", logoutError);
+      }
+      logout();
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+      alert("Có lỗi xảy ra khi tải ảnh lên!");
+      setIsUploadingAvatar(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-sv-cream py-8 md:py-12 font-nunito text-sv-brown">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,13 +163,39 @@ const ProfilePage = () => {
             {/* Box 1: Ảnh đại diện & Tên */}
             <div className="bg-white rounded-3xl border border-sv-tan p-6 shadow-sm flex flex-col items-center text-center">
               <div className="relative mb-4">
+                {/* Input chọn file ẩn đi */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+
                 <div className="w-28 h-28 rounded-full border-4 border-sv-brown bg-sv-pale flex items-center justify-center overflow-hidden shadow-inner">
-                  <span className="text-4xl font-black text-sv-brown">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
-                  </span>
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-4xl font-black text-sv-brown">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                    </span>
+                  )}
                 </div>
-                <button className="absolute bottom-0 right-0 bg-sv-wheat border border-sv-tan p-2 rounded-full hover:bg-sv-tan transition-colors shadow-sm text-sv-brown">
-                  <Camera size={16} />
+
+                <button
+                  onClick={handleAvatarClick}
+                  disabled={isUploadingAvatar}
+                  className="absolute bottom-0 right-0 bg-sv-wheat border border-sv-tan p-2 rounded-full hover:bg-sv-tan transition-colors shadow-sm text-sv-brown disabled:opacity-50"
+                >
+                  {isUploadingAvatar ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Camera size={16} />
+                  )}
                 </button>
               </div>
               <h2 className="text-xl font-black uppercase text-sv-brown">
@@ -154,7 +220,6 @@ const ProfilePage = () => {
                   <Loader2 className="animate-spin text-sv-brown" size={24} />
                 </div>
               ) : (
-                // 👉 SỬA CHỖ NÀY: Dùng flex-nowrap và overflow-x-auto để tạo hàng ngang vuốt được
                 <div className="flex flex-nowrap overflow-x-auto gap-3 pb-2 custom-scrollbar snap-x">
                   {/* Ô 1: Chờ xử lý */}
                   <div className="flex-1 min-w-[85px] snap-start bg-sv-pale rounded-2xl border border-sv-tan p-3 flex flex-col items-center text-center transition-transform hover:-translate-y-1">

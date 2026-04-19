@@ -14,6 +14,7 @@ import OrderHistoryPage from "./pages/OrderHistoryPage";
 import InvoicePage from "./pages/InvoicePage";
 import TokenExpiryPopup from "./components/TokenExpiryPopup";
 import ProfilePage from "./pages/ProfilePage";
+import SearchPage from './pages/SearchPage';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -53,6 +54,8 @@ function App() {
           <Route path="/profile/orders" element={<OrderHistoryPage />} />
           <Route path="/order/invoice/:id" element={<InvoicePage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/search" element={<SearchPage />} />
+
 
           {/* CÁC TRANG CẦN BẢO VỆ SẼ ĐƯỢC BỌC BỞI <ProtectedRoute> */}
           <Route

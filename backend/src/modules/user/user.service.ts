@@ -9,10 +9,14 @@ import {
   UpdateProfileDto,
 } from 'src/interface/dtos/user.dto';
 import * as argon2 from 'argon2';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService,
+  ) {}
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const user = await this.prisma.user.update({
@@ -54,5 +58,22 @@ export class UserService {
       where: { id: userId },
       data: { password: newHashedPassword },
     });
+  }
+  async uploadAvatar(userId: string, file: Express.Multer.File) {
+    const uploaded = await this.cloudinary.uploadAvatar(file);
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: uploaded.secure_url }, // 👉 Khớp với schema avatarUrl
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+        role: true,
+      },
+    });
+
+    return user;
   }
 }

@@ -23,6 +23,7 @@ import { VolumesModule } from './modules/volumes/volumes.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { SeriesModule } from './modules/series/series.module';
 import { UserModule } from './modules/user/user.module';
+import { SearchModule } from './modules/search/search.module';
 
 
 @Module({
@@ -38,6 +39,7 @@ import { UserModule } from './modules/user/user.module';
     CloudinaryModule,
     OrderModule,
     UserModule,
+    SearchModule,
     VolumesModule,
 
 
