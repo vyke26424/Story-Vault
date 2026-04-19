@@ -75,7 +75,7 @@ const CatalogPage = () => {
           `/series/catalog?${query.toString()}`,
         );
 
-        const payload = res.data; 
+        const payload = res.data;
 
         if (payload && payload.meta) {
           // Trường hợp 1: Backend có phân trang (Có meta)
@@ -323,7 +323,7 @@ const CatalogPage = () => {
                         </p>
                         <div className="mt-auto">
                           <p className="text-xs font-bold text-gray-400 mb-0.5">
-                            Giá từ:
+                            Giá chỉ từ:
                           </p>
                           <p className="text-lg font-black text-sv-brown">
                             {firstVolume

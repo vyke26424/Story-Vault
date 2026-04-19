@@ -333,15 +333,28 @@ const SearchPage = () => {
                             : ""}
                         </h3>
                         <div className="mt-auto flex items-end justify-between">
-                          <p className="font-black text-lg text-sv-brown">
-                            {new Intl.NumberFormat("vi-VN").format(
-                              item.price || 0,
-                            )}
-                            đ
-                          </p>
+                          <div className="flex flex-col">
+                            {item.originalPrice &&
+                              item.originalPrice > item.price && (
+                                <p className="text-xs font-bold text-sv-brown line-through opacity-70 mb-0.5">
+                                  {new Intl.NumberFormat("vi-VN").format(
+                                    item.originalPrice,
+                                  )}
+                                  đ
+                                </p>
+                              )}
+                            <p
+                              className={`font-black text-lg ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
+                            >
+                              {new Intl.NumberFormat("vi-VN").format(
+                                item.price || 0,
+                              )}
+                              đ
+                            </p>
+                          </div>
                           <button
                             onClick={(e) => handleAddToCart(e, item)}
-                            className="w-10 h-10 rounded-full bg-sv-wheat text-sv-brown flex items-center justify-center hover:bg-sv-brown hover:text-white transition-colors"
+                            className="w-10 h-10 rounded-full bg-sv-wheat text-sv-brown flex items-center justify-center hover:bg-sv-brown hover:text-white transition-colors shrink-0"
                             title="Thêm vào giỏ hàng"
                           >
                             <ShoppingCart size={18} strokeWidth={2.5} />
