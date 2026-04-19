@@ -29,9 +29,11 @@ const LoginPage = () => {
           email,
           password,
         });
-        setAuth(response.user, response.accessToken);
 
-        if (response.user?.role === "ADMIN") {
+        const payload = response.data || response;
+        setAuth(payload.user, payload.accessToken);
+
+        if (payload.user?.role === "ADMIN") {
           navigate("/admin", { replace: true });
         } else {
           navigate(from, { replace: true });
@@ -42,9 +44,11 @@ const LoginPage = () => {
           password,
           name,
         });
-        setAuth(response.user, response.accessToken);
 
-        if (response.user?.role === "ADMIN") {
+        const payload = response.data || response;
+        setAuth(payload.user, payload.accessToken);
+
+        if (payload.user?.role === "ADMIN") {
           navigate("/admin", { replace: true });
         } else {
           navigate(from, { replace: true });

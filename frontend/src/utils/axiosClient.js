@@ -13,7 +13,7 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   (config) => {
     const accessToken = useAuthStore.getState().accessToken;
-    if (accessToken) {
+    if (accessToken && accessToken !== "undefined" && accessToken !== "null") {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
@@ -44,8 +44,14 @@ axiosClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 2. SILENT REFRESH: Nếu token hết hạn khi đang thao tác
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const currentToken = useAuthStore.getState().accessToken;
+
+    // 2. SILENT REFRESH: Nếu token hết hạn khi đang thao tác (Chỉ chạy khi ĐÃ CÓ token)
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      currentToken
+    ) {
       originalRequest._retry = true; // Đánh dấu để không bị lặp vô tận
 
       try {
@@ -82,9 +88,6 @@ axiosClient.interceptors.response.use(
 
         // Hết cứu (RefreshToken cũng chết) -> Đăng xuất thật
         useAuthStore.getState().logout();
-        if (window.location.pathname !== "/login") {
-          window.location.href = "/login";
-        }
         return Promise.reject(refreshError);
       }
     }

@@ -22,6 +22,8 @@ export class SeriesPublicController {
     const data = await this.seriesService.getAllSeriesPublic();
     return { message: 'Lấy danh sách truyện thành công', data };
   }
+
+  @Public()
   @Get('catalog')
   async getCatalog(@Query() query: any) {
     const data = await this.seriesService.getCatalog(query);
