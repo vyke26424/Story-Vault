@@ -6,6 +6,7 @@ import {
   Upload,
   Image as ImageIcon,
   Loader2,
+  Copy,
 } from "lucide-react";
 import axiosClient from "../../utils/axiosClient";
 
@@ -19,6 +20,7 @@ const ProductFormPage = () => {
   const [initialLoading, setInitialLoading] = useState(isEditMode);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [imageUrlInput, setImageUrlInput] = useState("");
 
   const [formData, setFormData] = useState({
     seriesId: "",
@@ -64,7 +66,10 @@ const ProductFormPage = () => {
             : "",
           isActive: vol.isActive,
         });
-        if (vol.coverImage) setImagePreview(vol.coverImage);
+        if (vol.coverImage) {
+          setImagePreview(vol.coverImage);
+          setImageUrlInput(vol.coverImage);
+        }
       }
     } catch (error) {
       alert("Không tìm thấy dữ liệu tập truyện này!");
@@ -78,8 +83,17 @@ const ProductFormPage = () => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+      setImageUrlInput(url);
     }
+  };
+
+  const handleImageUrlChange = (e) => {
+    const val = e.target.value;
+    setImageUrlInput(val);
+    setImagePreview(val);
+    setImageFile(null); // Nếu nhập URL thì bỏ file để ưu tiên URL
   };
 
   const handleSubmit = async (e) => {
@@ -116,6 +130,8 @@ const ProductFormPage = () => {
 
       if (imageFile) {
         submitData.append("coverImage", imageFile);
+      } else if (imageUrlInput) {
+        submitData.append("coverImage", imageUrlInput);
       }
 
       if (isEditMode) {
@@ -381,6 +397,33 @@ const ProductFormPage = () => {
                 onChange={handleImageChange}
               />
             </label>
+
+            {/* Hộp input đường dẫn ảnh cho phép copy / paste */}
+            <div className="mt-4">
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Đường dẫn ảnh (URL)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={imageUrlInput}
+                  onChange={handleImageUrlChange}
+                  className="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 font-medium text-sm"
+                  placeholder="https://..."
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(imageUrlInput);
+                    alert("Đã copy đường dẫn ảnh!");
+                  }}
+                  className="p-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl text-stone-600 transition-colors"
+                  title="Copy URL"
+                >
+                  <Copy size={20} />
+                </button>
+              </div>
+            </div>
           </div>
 
           <button

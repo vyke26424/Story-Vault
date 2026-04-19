@@ -130,15 +130,17 @@ export class SeriesService {
         : [categoryIds]
       : [];
 
+    const uniqueCategoryIds = Array.from(new Set(validCategoryIds));
+
     try {
       const newSerie = await this.prisma.series.create({
         data: {
           ...resData,
           slug: currentslug,
           coverImage: secureUrl,
-          ...(validCategoryIds.length > 0 && {
+          ...(uniqueCategoryIds.length > 0 && {
             categories: {
-              connect: validCategoryIds.map((id: string) => ({ id: id })),
+              connect: uniqueCategoryIds.map((id: string) => ({ id: id })),
             },
           }),
         },
@@ -189,15 +191,19 @@ export class SeriesService {
         : [categoryIds]
       : undefined;
 
+    const uniqueCategoryIds = validCategoryIds
+      ? Array.from(new Set(validCategoryIds))
+      : undefined;
+
     return await this.prisma.series.update({
       where: { id: seriesId },
       data: {
         ...resData,
         slug: data.slug ? currentslug : undefined,
         ...(newImageUrl ? { coverImage: newImageUrl } : {}),
-        ...(validCategoryIds && {
+        ...(uniqueCategoryIds && {
           categories: {
-            set: validCategoryIds.map((catId: string) => ({ id: catId })),
+            set: uniqueCategoryIds.map((catId: string) => ({ id: catId })),
           },
         }),
       },

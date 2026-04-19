@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Copy } from "lucide-react";
 import axiosClient from "../../utils/axiosClient";
 
 const SeriesFormPage = () => {
@@ -12,6 +12,7 @@ const SeriesFormPage = () => {
   const [initialLoading, setInitialLoading] = useState(isEditMode);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [imageUrlInput, setImageUrlInput] = useState("");
   const [categoriesList, setCategoriesList] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -60,7 +61,10 @@ const SeriesFormPage = () => {
           isActive: serie.isActive,
           categoryIds: serie.categories?.map((cat) => cat.id) || [],
         });
-        if (serie.coverImage) setImagePreview(serie.coverImage);
+        if (serie.coverImage) {
+          setImagePreview(serie.coverImage);
+          setImageUrlInput(serie.coverImage);
+        }
       } else {
         alert("Không tìm thấy dữ liệu bộ truyện này!");
         navigate("/admin/series");
@@ -77,8 +81,17 @@ const SeriesFormPage = () => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+      setImageUrlInput(url);
     }
+  };
+
+  const handleImageUrlChange = (e) => {
+    const val = e.target.value;
+    setImageUrlInput(val);
+    setImagePreview(val);
+    setImageFile(null); // Nếu nhập URL thì bỏ file để ưu tiên URL
   };
 
   const handleSubmit = async (e) => {
@@ -101,13 +114,20 @@ const SeriesFormPage = () => {
       if (formData.totalVolumes)
         submitData.append("totalVolumes", Number(formData.totalVolumes));
 
-      // Thay vì submitData.append một lần, ta lặp mảng và đẩy nhiều lần cùng một key
-      formData.categoryIds.forEach((id) => {
-        submitData.append("categoryIds", id);
-      });
+      // Fix lỗi DTO "categoryIds must be an array" khi chỉ có 1 thể loại được chọn (Multer sẽ parse 1 item thành String)
+      if (formData.categoryIds.length === 1) {
+        submitData.append("categoryIds", formData.categoryIds[0]);
+        submitData.append("categoryIds", formData.categoryIds[0]); // Đẩy 2 lần để ép Multer hiểu đây là Mảng (Array)
+      } else {
+        formData.categoryIds.forEach((id) => {
+          submitData.append("categoryIds", id);
+        });
+      }
 
       if (imageFile) {
         submitData.append("coverImage", imageFile);
+      } else if (imageUrlInput) {
+        submitData.append("coverImage", imageUrlInput);
       }
 
       if (isEditMode) {
@@ -116,7 +136,7 @@ const SeriesFormPage = () => {
         });
         alert("Cập nhật Bộ truyện thành công!");
       } else {
-        if (!imageFile)
+        if (!imageFile && !imageUrlInput)
           return alert("Sếp phải tải ảnh bìa lên nhé (Bắt buộc)!");
         await axiosClient.post("/admin/series", submitData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -341,6 +361,33 @@ const SeriesFormPage = () => {
                 onChange={handleImageChange}
               />
             </label>
+
+            {/* Hộp input đường dẫn ảnh cho phép copy / paste */}
+            <div className="mt-4">
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Đường dẫn ảnh (URL)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={imageUrlInput}
+                  onChange={handleImageUrlChange}
+                  className="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl px-4 py-2 focus:ring-2 focus:ring-amber-500 font-medium text-sm"
+                  placeholder="https://..."
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(imageUrlInput);
+                    alert("Đã copy đường dẫn ảnh!");
+                  }}
+                  className="p-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl text-stone-600 transition-colors"
+                  title="Copy URL"
+                >
+                  <Copy size={20} />
+                </button>
+              </div>
+            </div>
           </div>
 
           <button

@@ -30,7 +30,12 @@ const LoginPage = () => {
           password,
         });
         setAuth(response.user, response.accessToken);
-        navigate(from, { replace: true });
+
+        if (response.user?.role === "ADMIN") {
+          navigate("/admin", { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
       } else {
         const response = await axiosClient.post("/auth/register", {
           email,
@@ -38,7 +43,12 @@ const LoginPage = () => {
           name,
         });
         setAuth(response.user, response.accessToken);
-        navigate(from, { replace: true });
+
+        if (response.user?.role === "ADMIN") {
+          navigate("/admin", { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
       }
     } catch (error) {
       setErrorMsg(
