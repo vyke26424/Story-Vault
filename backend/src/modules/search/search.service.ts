@@ -103,6 +103,7 @@ export class SearchService {
     let orderBy: Prisma.VolumeOrderByWithRelationInput = { createdAt: 'desc' };
     if (sort === 'price_asc') orderBy = { price: 'asc' };
     if (sort === 'price_desc') orderBy = { price: 'desc' };
+    if (sort === 'sold_desc') orderBy = { soldCount: 'desc' };
 
     const currentPage = Number(page);
     const take = Number(limit);

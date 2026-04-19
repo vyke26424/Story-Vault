@@ -11,7 +11,6 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Mỗi khi pathname (đường dẫn) thay đổi, cuộn mượt mà lên tọa độ 0,0
     window.scrollTo({
       top: 0,
       left: 0,
@@ -41,6 +40,18 @@ import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
 import CatalogPage from "./pages/CatalogPage";
 
+// Import Pages (Footer)
+import TermsOfUsePage from "./pages/footer/TermsOfUsePage";
+import PrivacyPolicyPage from "./pages/footer/PrivacyPolicyPage";
+import PaymentSecurityPage from "./pages/footer/PaymentSecurityPage";
+import AboutUsPage from "./pages/footer/AboutUsPage";
+
+import ReturnPolicyPage from "./pages/footer/ReturnPolicyPage";
+import WarrantyPolicyPage from "./pages/footer/WarrantyPolicyPage";
+import ShippingPolicyPage from "./pages/footer/ShippingPolicyPage";
+import WholesalePolicyPage from "./pages/footer/WholesalePolicyPage";
+
+
 // Import Admin
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -64,7 +75,6 @@ const PublicLayout = () => {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1 bg-sv-cream">
-        {/* Nơi hiển thị ruột của các trang con (Home, Cart, Profile...) */}
         <Outlet />
       </main>
       <Footer />
@@ -89,6 +99,16 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/catalog" element={<CatalogPage />} />
+
+          <Route path="/terms" element={<TermsOfUsePage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/payment-security" element={<PaymentSecurityPage />} />
+          <Route path="/about" element={<AboutUsPage />} />
+
+          <Route path="/return-policy" element={<ReturnPolicyPage />} />
+          <Route path="/warranty-policy" element={<WarrantyPolicyPage />} />
+          <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
+          <Route path="/wholesale-policy" element={<WholesalePolicyPage />} />
 
           {/* Các trang BẮT BUỘC ĐĂNG NHẬP (Chỉ dành cho Customer) */}
           <Route element={<ProtectedRoute />}>
