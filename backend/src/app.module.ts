@@ -7,6 +7,7 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 import { RolesGuard } from './auth/guard/roles.guard';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'; // 👉 Import Throttler
 
 import { OrderModule } from './modules/order/order.module';
 import cloudinaryConfig from './config/cloudinary.config';
@@ -28,6 +29,12 @@ import { CategoryModule } from './modules/category/category.module';
       isGlobal: true,
       load: [jwtConfig, cloudinaryConfig],
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     AuthModule,
     AdminModule,
@@ -50,6 +57,10 @@ import { CategoryModule } from './modules/category/category.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

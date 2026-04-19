@@ -2,14 +2,23 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axiosClient from "../utils/axiosClient";
 import useCartStore from "../store/useCartStore";
-import { Loader2, ShoppingCart, ArrowRight } from "lucide-react";
+import {
+  Loader2,
+  ShoppingCart,
+  ArrowRight,
+  Swords,
+  Sparkles,
+  ScrollText,
+  Zap,
+  Library,
+} from "lucide-react";
 
 const TYPE_LABELS = {
-  MANGA: "Manga",
-  LIGHT_NOVEL: "Light Novel",
-  NOVEL: "Tiểu thuyết",
-  COMIC: "Comic",
-  BOOK: "Sách Nổi Tiếng",
+  MANGA: { label: "Manga", Icon: Swords, color: "text-red-500" },
+  LIGHT_NOVEL: { label: "Light Novel", Icon: Sparkles, color: "text-pink-500" },
+  NOVEL: { label: "Tiểu thuyết", Icon: ScrollText, color: "text-amber-600" },
+  COMIC: { label: "Comic", Icon: Zap, color: "text-blue-500" },
+  BOOK: { label: "Sách Nổi Tiếng", Icon: Library, color: "text-emerald-600" },
 };
 
 const HomePage = () => {
@@ -92,7 +101,7 @@ const HomePage = () => {
 
       {/* --- CÁC DANH MỤC TRUYỆN --- */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {Object.entries(TYPE_LABELS).map(([type, label]) => {
+        {Object.entries(TYPE_LABELS).map(([type, { label, Icon, color }]) => {
           const items = sections[type] || [];
           if (items.length === 0) return null;
 
@@ -103,8 +112,8 @@ const HomePage = () => {
             >
               {/* Tiêu đề & Nút Xem tất cả */}
               <div className="flex items-center justify-between mb-6 border-b border-sv-pale pb-4">
-                <h2 className="text-2xl md:text-3xl font-black text-sv-brown uppercase tracking-wider">
-                  {label}
+                <h2 className="text-2xl md:text-3xl font-black text-sv-brown uppercase tracking-wider flex items-center gap-3">
+                  <Icon className={color} size={32} strokeWidth={2.5} /> {label}
                 </h2>
                 <Link
                   to={`/catalog?type=${type}`}

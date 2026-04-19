@@ -1,4 +1,26 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Outlet,
+  useLocation,
+} from "react-router-dom";
+import { useEffect } from "react";
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Mỗi khi pathname (đường dẫn) thay đổi, cuộn mượt mà lên tọa độ 0,0
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant", // Hoặc đổi thành "smooth" nếu sếp thích nó cuộn từ từ
+    });
+  }, [pathname]);
+
+  return null; // Component này chạy ngầm, không hiển thị gì cả
+};
 
 // Import Layout & Component dùng chung
 import Header from "./components/Header";
@@ -33,9 +55,6 @@ import StockListPage from "./pages/admin/StockListPage";
 import UserListPage from "./pages/admin/UserListPage";
 import ReviewListPage from "./pages/admin/ReviewListPage";
 
-
-
-
 // ==========================================
 // LAYOUT DÀNH CHO KHÁCH HÀNG
 // (Tự động gắn Header ở trên và Footer ở dưới)
@@ -56,9 +75,7 @@ const PublicLayout = () => {
 function App() {
   return (
     <BrowserRouter>
-      {/* Đặt Popup ở đây để nó làm "Bảo vệ toàn cục", 
-        dù khách đang ở trang chủ hay sếp đang ở trang Admin thì nó vẫn canh me token! 
-      */}
+      <ScrollToTop />
       <TokenExpiryPopup />
 
       <Routes>
@@ -72,7 +89,6 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/catalog" element={<CatalogPage />} />
-
 
           {/* Các trang BẮT BUỘC ĐĂNG NHẬP (Chỉ dành cho Customer) */}
           <Route element={<ProtectedRoute />}>
@@ -114,8 +130,6 @@ function App() {
             <Route path="stocks" element={<StockListPage />} />
             <Route path="users" element={<UserListPage />} />
             <Route path="reviews" element={<ReviewListPage />} />
-            
-
           </Route>
         </Route>
       </Routes>

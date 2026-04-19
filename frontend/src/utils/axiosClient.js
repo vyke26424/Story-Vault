@@ -34,6 +34,16 @@ axiosClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // 0. XỬ LÝ LỖI 429 (Too Many Requests) - Thao tác quá nhanh
+    if (error.response?.status === 429) {
+      // Ghi đè lại câu message của Backend bằng tiếng Việt
+      if (!error.response.data) error.response.data = {};
+      error.response.data.message =
+        "Chậm thôi bạn ơi! Thao tác quá nhanh, vui lòng chờ một lát.";
+
+      return Promise.reject(error);
+    }
+
     // 1. NẾU LỖI LÀ TỪ TRANG LOGIN HOẶC LOGOUT -> BỎ QUA (Để Frontend tự báo lỗi sai pass)
     if (
       error.response?.status === 401 &&

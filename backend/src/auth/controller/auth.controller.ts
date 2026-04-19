@@ -3,6 +3,7 @@ import { AuthService } from '../service/auth.service';
 import { Register, SignIn } from 'src/interface/dtos/auth.dto';
 import { Response, Request } from 'express';
 import { Public } from 'src/decorator/public/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -21,7 +22,7 @@ export class AuthController {
     res.cookie('refreshToken', data.refreshToken, {
       httpOnly: true,
       sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production', // Môi trường dev (localhost) thì secure = false
+      secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -29,6 +30,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('signin')
   async signIn(
     @Body() dto: SignIn,

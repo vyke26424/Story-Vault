@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { Public } from 'src/decorator/public/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('search')
 export class SearchController {
@@ -8,6 +9,7 @@ export class SearchController {
 
   // Đón API: GET /search/preview?q=...
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 10000 } })
   @Get('preview')
   async getPreview(@Query('q') q: string) {
     const data = await this.searchService.getPreview(q);
