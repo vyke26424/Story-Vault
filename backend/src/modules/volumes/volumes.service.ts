@@ -156,4 +156,35 @@ export class VolumesService {
       throw error;
     }
   }
+  // Cập nhật tồn kho hàng loạt từ Excel
+  async bulkImportStock(items: { volumeId: string; quantity: number; note?: string }[]) {
+    return await this.prisma.$transaction(async (tx) => {
+      let importedCount = 0;
+
+      for (const item of items) {
+        // Kiểm tra xem ID sách có tồn tại không
+        const volume = await tx.volume.findUnique({ where: { id: item.volumeId } });
+        if (!volume) continue; // Bỏ qua nếu ID sai
+
+        // 1. Cộng dồn vào kho hiện tại
+        await tx.volume.update({
+          where: { id: item.volumeId },
+          data: { stock: { increment: item.quantity } },
+        });
+
+        // 2. Ghi lại lịch sử nhập kho
+        await tx.inventoryTransaction.create({
+          data: {
+            volumeId: item.volumeId,
+            type: 'IMPORT',
+            quantity: item.quantity,
+            note: item.note || 'Nhập kho hàng loạt bằng Excel',
+          },
+        });
+        
+        importedCount++;
+      }
+      return importedCount; // Trả về số lượng đã nhập thành công
+    });
+  }
 }

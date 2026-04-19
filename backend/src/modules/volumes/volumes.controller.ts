@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  Query,
+} from '@nestjs/common';
 import { VolumesService } from './volumes.service';
 import { CreateVolumeDto } from './dto/create-volume.dto';
 import { UpdateVolumeDto } from './dto/update-volume.dto';
@@ -13,70 +24,94 @@ export class VolumesController {
   @Roles(Role.ADMIN)
   @Post()
   @UseInterceptors(FileInterceptor('coverImage'))
-  async create(@Body() createVolumeDto: CreateVolumeDto, @UploadedFile() file? : Express.Multer.File) {
+  async create(
+    @Body() createVolumeDto: CreateVolumeDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
     const data = await this.volumesService.createVolume(createVolumeDto, file);
     return {
-      message : 'Tạo mới volume thành công',
-      data
-    }
+      message: 'Tạo mới volume thành công',
+      data,
+    };
   }
 
   @Roles(Role.ADMIN)
   @Get()
   async findAll(
-    @Query('cursor') cursor?: string, 
+    @Query('cursor') cursor?: string,
     @Query('search') search?: string,
-    @Query('isActive') isActive?: string
+    @Query('isActive') isActive?: string,
   ) {
-    const data = await this.volumesService.getAllVolumes(cursor, search, isActive);
+    const data = await this.volumesService.getAllVolumes(
+      cursor,
+      search,
+      isActive,
+    );
     return {
-      message : 'Tìm kiếm danh sách volume thành công',
-      data
-    }
+      message: 'Tìm kiếm danh sách volume thành công',
+      data,
+    };
   }
 
   @Roles(Role.ADMIN)
   @Patch('restore/:volumeId')
-  async restoreVolume(
-    @Param('volumeId') volumeId : string
-  ) {
+  async restoreVolume(@Param('volumeId') volumeId: string) {
     const data = await this.volumesService.restoreVolume(volumeId);
     return {
-      message : 'Khôi phục volume thành công',
-      data
-    }
+      message: 'Khôi phục volume thành công',
+      data,
+    };
   }
-
 
   @Get(':volumeId')
   async findOne(@Param('volumeId') volumeId: string) {
     const data = await this.volumesService.getVolumeById(volumeId);
     return {
-      message : 'Lấy thông tin chi tiết volume thành công',
-      data
-    }
+      message: 'Lấy thông tin chi tiết volume thành công',
+      data,
+    };
   }
 
   @Roles(Role.ADMIN)
   @Patch(':volumeId')
   @UseInterceptors(FileInterceptor('coverImage'))
-  async update(@Param('volumeId') volumeId: string, @Body() updateVolumeDto: UpdateVolumeDto, @UploadedFile()file? : Express.Multer.File) {
-    const data = await this.volumesService.updateVolume(volumeId, updateVolumeDto, file);
+  async update(
+    @Param('volumeId') volumeId: string,
+    @Body() updateVolumeDto: UpdateVolumeDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const data = await this.volumesService.updateVolume(
+      volumeId,
+      updateVolumeDto,
+      file,
+    );
     return {
-      message : 'Cập nhật volume thành công',
-      data
-    }
+      message: 'Cập nhật volume thành công',
+      data,
+    };
   }
 
   @Roles(Role.ADMIN)
   @Delete(':volumeId')
-  async remove(@Param('volumeId') volumeId : string) {
+  async remove(@Param('volumeId') volumeId: string) {
     const data = await this.volumesService.removeVolume(volumeId);
     return {
-      message : 'Xóa volume thành công',
-      data
-    }
+      message: 'Xóa volume thành công',
+      data,
+    };
   }
-
-
+  @Roles(Role.ADMIN)
+  @Post('bulk-import')
+  async bulkImportStock(
+    @Body()
+    body: {
+      items: { volumeId: string; quantity: number; note?: string }[];
+    },
+  ) {
+    const data = await this.volumesService.bulkImportStock(body.items);
+    return {
+      message: `Đã nhập kho thành công cho ${data} đầu sách!`,
+      data,
+    };
+  }
 }

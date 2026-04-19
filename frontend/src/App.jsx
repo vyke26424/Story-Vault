@@ -28,11 +28,12 @@ import SeriesFormPage from "./pages/admin/SeriesFormPage";
 import CategoryListPage from "./pages/admin/CategoryListPage";
 import CategoryFormPage from "./pages/admin/CategoryFormPage";
 import AdminOrdersPage from "./pages/admin/OrderListPage";
+import StockListPage from "./pages/admin/StockListPage";
+import UserListPage from "./pages/admin/UserListPage";
+import ReviewListPage from "./pages/admin/ReviewListPage";
 
-// TODO: TẠO FILE RIÊNG CHO CÁC TRANG NÀY SAU
-const AdminUsersPage = () => (
-  <div className="p-6">Trang Quản lý Khách hàng</div>
-);
+
+
 
 // ==========================================
 // LAYOUT DÀNH CHO KHÁCH HÀNG
@@ -107,11 +108,11 @@ function App() {
             <Route path="categories/create" element={<CategoryFormPage />} />
             <Route path="categories/edit/:id" element={<CategoryFormPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
+            <Route path="stocks" element={<StockListPage />} />
+            <Route path="users" element={<UserListPage />} />
+            <Route path="reviews" element={<ReviewListPage />} />
             
 
-            {/* Thêm các route còn thiếu để menu hoạt động */}
-            <Route path="orders" element={<AdminOrdersPage />} />
-            <Route path="users" element={<AdminUsersPage />} />
           </Route>
         </Route>
       </Routes>

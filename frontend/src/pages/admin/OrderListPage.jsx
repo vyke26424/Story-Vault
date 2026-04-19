@@ -38,6 +38,20 @@ const OrderListPage = () => {
     }
   };
 
+  const handlePaymentStatusChange = async (orderId, newStatus) => {
+    if (window.confirm("Xác nhận đổi trạng thái thanh toán của đơn này?")) {
+      try {
+        await axiosClient.patch(`/admin/orders/${orderId}/payment-status`, {
+          status: newStatus,
+        });
+        alert("Đã cập nhật trạng thái thanh toán!");
+        fetchOrders(); // Refresh lại data
+      } catch (error) {
+        alert("Lỗi cập nhật thanh toán!");
+      }
+    }
+  };
+
   const filteredOrders = orders.filter(
     (o) =>
       o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,19 +143,35 @@ const OrderListPage = () => {
                       </p>
                     </td>
                     <td className="p-4 text-center">
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex flex-col items-center gap-2">
                         <span className="text-xs font-bold text-stone-500 bg-stone-200 px-2 py-0.5 rounded">
                           {order.payment?.method}
                         </span>
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-wider ${
-                            order.payment?.status === "SUCCESS"
-                              ? "text-green-600"
-                              : "text-yellow-600"
-                          }`}
+
+                        <select
+                          value={order.payment?.status}
+                          onChange={(e) =>
+                            handlePaymentStatusChange(order.id, e.target.value)
+                          }
+                          disabled={order.status === "CANCELLED"}
+                          className={`text-[10px] font-black uppercase tracking-wider rounded border cursor-pointer focus:outline-none px-2 py-1 transition-colors
+        ${order.status === "CANCELLED" ? "cursor-not-allowed opacity-50" : ""}
+        ${
+          order.payment?.status === "SUCCESS"
+            ? "bg-green-100 text-green-700 border-green-200"
+            : order.payment?.status === "FAILED"
+              ? "bg-red-100 text-red-700 border-red-200"
+              : order.payment?.status === "REFUNDED"
+                ? "bg-purple-100 text-purple-700 border-purple-200"
+                : "bg-yellow-100 text-yellow-700 border-yellow-200"
+        }
+      `}
                         >
-                          {order.payment?.status}
-                        </span>
+                          <option value="PENDING">Chờ TT</option>
+                          <option value="SUCCESS">Đã TT</option>
+                          <option value="FAILED">Thất bại</option>
+                          <option value="REFUNDED">Hoàn tiền</option>
+                        </select>
                       </div>
                     </td>
                     <td className="p-4 text-center">

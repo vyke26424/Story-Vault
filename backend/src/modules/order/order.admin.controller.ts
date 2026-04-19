@@ -29,4 +29,16 @@ export class OrderAdminController {
       data,
     };
   }
+  @Roles(Role.ADMIN)
+  @Patch(':id/payment-status')
+  async updatePaymentStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
+    const data = await this.orderService.updatePaymentStatusByAdmin(id, status);
+    return {
+      message: 'Cập nhật trạng thái thanh toán thành công',
+      data,
+    };
+  }
 }

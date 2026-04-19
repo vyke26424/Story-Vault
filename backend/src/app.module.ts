@@ -17,6 +17,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { SeriesModule } from './modules/series/series.module';
 import { UserModule } from './modules/user/user.module';
 import { SearchModule } from './modules/search/search.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
@@ -35,6 +36,7 @@ import { CategoryModule } from './modules/category/category.module';
     CloudinaryModule,
     OrderModule,
     UserModule,
+    ReviewsModule,
     SearchModule,
     VolumesModule,
   ],

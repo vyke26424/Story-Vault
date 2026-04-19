@@ -244,4 +244,24 @@ export class OrderService {
       data: { status: newStatus },
     });
   }
+  async updatePaymentStatusByAdmin(orderId: string, status: any) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { orderId: orderId },
+    });
+
+    if (!payment) {
+      throw new BadRequestException(
+        'Không tìm thấy thông tin thanh toán của đơn hàng này!',
+      );
+    }
+
+    // Cập nhật trạng thái thanh toán. Nếu là SUCCESS thì tự động ghi nhận giờ thanh toán (paidAt)
+    return this.prisma.payment.update({
+      where: { orderId: orderId },
+      data: {
+        status: status,
+        ...(status === 'SUCCESS' ? { paidAt: new Date() } : {}),
+      },
+    });
+  }
 }

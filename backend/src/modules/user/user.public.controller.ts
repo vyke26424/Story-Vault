@@ -17,7 +17,7 @@ import {
 } from 'src/interface/dtos/user.dto';
 
 @Controller('user')
-export class UserController {
+export class UserPublicController {
   constructor(private readonly userService: UserService) {}
 
   @Put('profile')

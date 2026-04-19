@@ -76,4 +76,34 @@ export class UserService {
 
     return user;
   }
+  // ==========================================
+  // CÁC HÀM DÀNH CHO ADMIN
+  // ==========================================
+
+  async getAllUsersForAdmin() {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+        _count: {
+          select: { orders: true }, // Đếm số đơn hàng khách đã mua
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateUserRole(userId: string, role: any) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng này');
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { role },
+    });
+  }
 }

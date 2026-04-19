@@ -135,7 +135,6 @@ const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* 👉 BIỂU ĐỒ DOANH THU (Bên trái, chiếm 2 phần) */}
         <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-stone-200 p-6 flex flex-col">
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 size={24} className="text-amber-500" />
@@ -143,7 +142,7 @@ const AdminDashboard = () => {
               Doanh thu 7 ngày qua
             </h2>
           </div>
-          <div className="flex-1 min-h-[300px] w-full">
+          <div className="w-full h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}

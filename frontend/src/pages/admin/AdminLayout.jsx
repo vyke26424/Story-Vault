@@ -47,14 +47,16 @@ const AdminLayout = () => {
     },
     { name: "Thể loại", icon: Tags, path: "/admin/categories" },
     { name: "Đơn hàng", icon: ShoppingCart, path: "/admin/orders" },
+    { name: "Kho", icon: ShoppingCart, path: "/admin/stocks" },
     { name: "Khách hàng", icon: Users, path: "/admin/users" },
+    { name: "Đánh giá", icon: Users, path: "/admin/reviews" },
   ];
 
   return (
     <div className="min-h-screen bg-stone-100 flex font-sans">
       {/* SIDEBAR */}
       <aside
-        className={`bg-stone-900 text-stone-300 flex flex-col transition-all duration-300 ease-in-out relative shrink-0 ${
+        className={`bg-stone-900 text-stone-300 flex flex-col transition-all duration-300 ease-in-out relative shrink-0 z-20 ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >

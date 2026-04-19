@@ -52,12 +52,18 @@ export class SeriesService {
 
   async getSeriesBySlug(slug: string) {
     const series = await this.prisma.series.findUnique({
-      where: { slug, isActive: true }, // Chỉ xem được truyện chưa xóa
+      where: { slug, isActive: true },
       include: {
         categories: true,
         volumes: {
           where: { isActive: true },
           orderBy: { volumeNumber: 'asc' },
+        },
+        reviews: {
+          include: {
+            user: { select: { name: true, avatarUrl: true } },
+          },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });

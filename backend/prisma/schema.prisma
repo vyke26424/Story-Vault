@@ -14,14 +14,14 @@ datasource db {
 // 1. USER & AUTH
 // ==========================================
 model User {
-  id           String         @id @default(uuid())
-  email        String         @unique
-  name         String?
-  password     String
-  avatarUrl    String?
-  role         Role           @default(CUSTOMER)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  avatarUrl String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   address      Address[]
   cart         Cart?
@@ -40,7 +40,7 @@ model RefreshToken {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
- // token     String   @unique
+  // token     String   @unique
   device    String?
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -59,31 +59,30 @@ model Address {
   city      String?
   isDefault Boolean?
 
-  orders    Order[]
+  orders Order[]
 
   @@index([userId, phone])
 }
 
-
 model Category {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
-  slug        String   @unique
+  slug        String  @unique
   description String?
 
-  series      Series[] 
+  series Series[]
 }
 
 model Series {
-  id           String   @id @default(uuid())
-  title        String
-  slug         String   @unique
-  description  String?
-  coverImage   String?
-  
-  author       String?  
-  publisher    String?
-  
+  id          String  @id @default(uuid())
+  title       String
+  slug        String  @unique
+  description String?
+  coverImage  String?
+
+  author    String?
+  publisher String?
+
   type         Type
   status       Status
   totalVolumes Int?
@@ -92,9 +91,10 @@ model Series {
   updatedAt    DateTime @updatedAt
 
   categories Category[]
-  volumes      Volume[]
-  reviews      Review[]
+  volumes    Volume[]
+  reviews    Review[]
 
+  @@index([title])
   @@index([isActive, createdAt(sort: Desc)])
 }
 
@@ -113,39 +113,43 @@ enum Status {
 }
 
 model Volume {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   seriesId      String
-  series        Series   @relation(fields: [seriesId], references: [id])
+  series        Series    @relation(fields: [seriesId], references: [id])
   title         String?
   coverImage    String?
-  price         Decimal  @db.Decimal(10, 2)
-  originalPrice Decimal? @db.Decimal(10, 2)
-  stock         Int      @default(0)
-  isbn          String?  @unique
+  price         Decimal   @db.Decimal(10, 2)
+  originalPrice Decimal?  @db.Decimal(10, 2)
+  stock         Int       @default(0)
+  isbn          String?   @unique
   publishDate   DateTime?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  volumeNumber  Int      @default(1)
-  updatedAt     DateTime @updatedAt
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  volumeNumber  Int       @default(1)
+  updatedAt     DateTime  @updatedAt
+  soldCount     Int       @default(0)
 
   cartItems     CartItem[]
   orderItems    OrderItem[]
-  inventoryLogs InventoryTransaction[] 
+  inventoryLogs InventoryTransaction[]
+
+  @@index([title])
+  @@index([seriesId])
 }
 
 // ==========================================
 // 3. INVENTORY MANAGEMENT
 // ==========================================
 model InventoryTransaction {
-  id          String          @id @default(uuid())
-  volumeId    String
-  volume      Volume          @relation(fields: [volumeId], references: [id])
-  
-  type        TransactionType
-  quantity    Int             // VD: +50 (nhập), -2 (xuất/hư hỏng)
-  note        String?         // VD: "Nhập sách Kim Đồng đợt 1"
-  
-  createdAt   DateTime        @default(now())
+  id       String @id @default(uuid())
+  volumeId String
+  volume   Volume @relation(fields: [volumeId], references: [id])
+
+  type     TransactionType
+  quantity Int // VD: +50 (nhập), -2 (xuất/hư hỏng)
+  note     String? // VD: "Nhập sách Kim Đồng đợt 1"
+
+  createdAt DateTime @default(now())
 }
 
 enum TransactionType {
@@ -158,13 +162,13 @@ enum TransactionType {
 // 4. CART & ORDER
 // ==========================================
 model Cart {
-  id        String     @id @default(uuid())
-  userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id])
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  items     CartItem[]
+  items CartItem[]
 }
 
 model CartItem {
@@ -190,9 +194,9 @@ model Order {
   updatedAt   DateTime    @updatedAt
   deletedAt   DateTime?
   status      OrderStatus @default(PENDING)
-  
-  items       OrderItem[]
-  payment     Payment?
+
+  items   OrderItem[]
+  payment Payment?
 }
 
 enum OrderStatus {
