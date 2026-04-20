@@ -22,6 +22,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 
 import { AdminModule } from './modules/admin/admin.module';
 import { CategoryModule } from './modules/category/category.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { CategoryModule } from './modules/category/category.module';
     ReviewsModule,
     SearchModule,
     VolumesModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [

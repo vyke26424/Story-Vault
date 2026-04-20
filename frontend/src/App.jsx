@@ -26,6 +26,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import TokenExpiryPopup from "./components/TokenExpiryPopup";
 import ProtectedRoute from "./components/ProtectedRoute";
+import FloatingFeedback from "./components/FloatingFeedback";
 
 // Import Pages (Khách hàng)
 import HomePage from "./pages/Home";
@@ -51,7 +52,6 @@ import WarrantyPolicyPage from "./pages/footer/WarrantyPolicyPage";
 import ShippingPolicyPage from "./pages/footer/ShippingPolicyPage";
 import WholesalePolicyPage from "./pages/footer/WholesalePolicyPage";
 
-
 // Import Admin
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -65,6 +65,7 @@ import AdminOrdersPage from "./pages/admin/OrderListPage";
 import StockListPage from "./pages/admin/StockListPage";
 import UserListPage from "./pages/admin/UserListPage";
 import ReviewListPage from "./pages/admin/ReviewListPage";
+import FeedbackListPage from "./pages/admin/FeedbackListPage";
 
 // ==========================================
 // LAYOUT DÀNH CHO KHÁCH HÀNG
@@ -76,6 +77,7 @@ const PublicLayout = () => {
       <Header />
       <main className="flex-1 bg-sv-cream">
         <Outlet />
+        <FloatingFeedback />
       </main>
       <Footer />
     </div>
@@ -150,6 +152,7 @@ function App() {
             <Route path="stocks" element={<StockListPage />} />
             <Route path="users" element={<UserListPage />} />
             <Route path="reviews" element={<ReviewListPage />} />
+            <Route path="feedbacks" element={<FeedbackListPage />} />
           </Route>
         </Route>
       </Routes>

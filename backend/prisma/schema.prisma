@@ -27,6 +27,7 @@ model User {
   cart         Cart?
   orders       Order[]
   reviews      Review[]
+  feedbacks    Feedback[]
   refreshToken RefreshToken[]
 }
 
@@ -62,6 +63,19 @@ model Address {
   orders Order[]
 
   @@index([userId, phone])
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String? // Có thể null nếu khách vãng lai (chưa đăng nhập)
+  email     String? // Bắt buộc nhập nếu là khách vãng lai
+  type      String // Loại: Báo lỗi, Góp ý, Khiếu nại...
+  content   String   @db.Text
+  status    String   @default("PENDING") // PENDING (Chưa xử lý), RESOLVED (Đã xử lý)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Category {

@@ -50,6 +50,7 @@ const AdminLayout = () => {
     { name: "Kho", icon: ShoppingCart, path: "/admin/stocks" },
     { name: "Khách hàng", icon: Users, path: "/admin/users" },
     { name: "Đánh giá", icon: Users, path: "/admin/reviews" },
+    { name: "Phản hồi", icon: Users, path: "/admin/feedbacks" },
   ];
 
   return (
