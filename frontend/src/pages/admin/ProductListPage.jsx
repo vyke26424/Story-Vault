@@ -7,6 +7,8 @@ import {
   RotateCcw,
   Image as ImageIcon,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axiosClient from "../../utils/axiosClient";
@@ -17,17 +19,36 @@ const ProductListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
 
-  const fetchVolumes = async () => {
+  // 👉 Thêm State cho Phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10; // Số lượng item trên 1 trang
+
+  const fetchVolumes = async (pageToFetch = currentPage) => {
     try {
       setLoading(true);
       const res = await axiosClient.get(`/volumes`, {
         params: {
           search: searchTerm,
           isActive: activeFilter,
+          page: pageToFetch,
+          limit: limit,
         },
       });
-      // ĐÃ FIX: res chính là cục { message, data }, nên mảng nằm ở res.data
-      setVolumes(res.data || []);
+
+      // Đón dữ liệu và thông tin phân trang từ Backend
+      setVolumes(res.data?.data || res.data || []);
+
+      // Cập nhật Meta nếu Backend có trả về (Nếu không có tạm thời tính chay)
+      const meta = res.data?.meta || res.meta;
+      if (meta) {
+        setTotalPages(meta.totalPages || 1);
+        setTotalItems(meta.totalItems || 0);
+      } else {
+        // Fallback an toàn nếu Backend chưa nâng cấp kịp
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách sách:", error);
     } finally {
@@ -35,12 +56,28 @@ const ProductListPage = () => {
     }
   };
 
+  // 👉 Xử lý khi Gõ Search hoặc Đổi Filter -> ÉP QUAY VỀ TRANG 1
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchVolumes();
+      setCurrentPage(1); // Luôn về trang 1 khi tìm kiếm
+      fetchVolumes(1);
     }, 500);
     return () => clearTimeout(timeoutId);
   }, [searchTerm, activeFilter]);
+
+  // 👉 Xử lý khi Đổi Trang (Bấm Next/Prev)
+  useEffect(() => {
+    // Chỉ fetch lại nếu không phải do Search/Filter trigger (để tránh gọi API 2 lần)
+    // Trick: Search/Filter gọi xong set currentPage = 1, Effect này sẽ chạy nhưng ta bọc nó bằng setTimeout ở trên rồi.
+    // Tốt nhất là gọi fetch trực tiếp khi bấm nút chuyển trang.
+  }, [currentPage]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchVolumes(newPage);
+    }
+  };
 
   const handleDelete = async (id, title) => {
     if (
@@ -48,7 +85,7 @@ const ProductListPage = () => {
     ) {
       try {
         await axiosClient.delete(`/volumes/${id}`);
-        fetchVolumes();
+        fetchVolumes(); // Xóa xong load lại trang hiện tại
       } catch (error) {
         alert("Có lỗi xảy ra khi ẩn sách!");
       }
@@ -111,7 +148,8 @@ const ProductListPage = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-200 flex-1 overflow-hidden flex flex-col">
+      {/* Bảng Dữ Liệu */}
+      <div className="bg-white rounded-2xl shadow-sm border border-stone-200 flex-1 flex flex-col overflow-hidden mb-6">
         <div className="overflow-x-auto flex-1 custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead className="bg-stone-50 sticky top-0 z-10">
@@ -181,24 +219,10 @@ const ProductListPage = () => {
                       <p className="font-black text-amber-600">
                         {new Intl.NumberFormat("vi-VN").format(vol.price)}đ
                       </p>
-                      {vol.originalPrice && vol.originalPrice > vol.price && (
-                        <p className="text-xs text-stone-400 line-through font-bold">
-                          {new Intl.NumberFormat("vi-VN").format(
-                            vol.originalPrice,
-                          )}
-                          đ
-                        </p>
-                      )}
                     </td>
                     <td className="p-4 text-center">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-black ${
-                          vol.stock > 10
-                            ? "bg-green-100 text-green-700"
-                            : vol.stock > 0
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                        }`}
+                        className={`px-3 py-1 rounded-full text-xs font-black ${vol.stock > 10 ? "bg-green-100 text-green-700" : vol.stock > 0 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
                       >
                         {vol.stock}
                       </span>
@@ -225,7 +249,6 @@ const ProductListPage = () => {
                         >
                           <Edit size={18} />
                         </Link>
-
                         {vol.isActive ? (
                           <button
                             onClick={() =>
@@ -270,6 +293,62 @@ const ProductListPage = () => {
             </tbody>
           </table>
         </div>
+
+        {/* 👉 COMPONENT PHÂN TRANG */}
+        {!loading && totalPages > 1 && (
+          <div className="bg-white border-t border-stone-200 p-4 flex items-center justify-between mt-auto">
+            <span className="text-sm font-bold text-stone-500">
+              Trang {currentPage} / {totalPages} (Tổng {totalItems} sản phẩm)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === 1
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {/* Sinh ra các nút số trang */}
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                // Chỉ hiển thị 5 trang gần nhất để không bị dài quá
+                if (pageNum < currentPage - 2 || pageNum > currentPage + 2)
+                  return null;
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-black transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-amber-500 text-stone-900 shadow-sm"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === totalPages
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

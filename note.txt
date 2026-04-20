@@ -24,7 +24,7 @@ Thêm hiển thị rõ Giá Gốc, Giá sale
 Khu vực thông tin "Đơn hàng" cũng thêm giá gốc giá sale 
 // Auth
 Người dùng đăng nhập tk 1, back về /login và đăng nhập tài khoản khác -> không đăng xuất + đăng nhập thêm tài khoản -> refreshToken tạo tiếp ko xóa đi khả năng bị lỗi
-// Liên Hệ Feedback
+// Liên Hệ Feedback ++
 Thêm page này
 // Kiểm tra Responsive
 Kiểm tra lại khi web hiển thị trên các thiếc bị

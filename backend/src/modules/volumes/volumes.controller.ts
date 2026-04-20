@@ -35,21 +35,26 @@ export class VolumesController {
     };
   }
 
+  // 👉 ĐÃ SỬA: Bổ sung đón page và limit
   @Roles(Role.ADMIN)
   @Get()
   async findAll(
-    @Query('cursor') cursor?: string,
     @Query('search') search?: string,
     @Query('isActive') isActive?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    const data = await this.volumesService.getAllVolumes(
-      cursor,
+    const result = await this.volumesService.getAllVolumes(
       search,
       isActive,
+      page,
+      limit,
     );
+    // Trả về đúng form { data, meta } cho Frontend phân trang
     return {
       message: 'Tìm kiếm danh sách volume thành công',
-      data,
+      data: result.data,
+      meta: result.meta,
     };
   }
 
@@ -100,6 +105,7 @@ export class VolumesController {
       data,
     };
   }
+
   @Roles(Role.ADMIN)
   @Post('bulk-import')
   async bulkImportStock(

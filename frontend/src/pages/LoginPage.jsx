@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axiosClient from "../utils/axiosClient";
 import useAuthStore from "../store/useAuthStore";
@@ -16,8 +16,16 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const user = useAuthStore((state) => state.user);
 
   const from = location.state?.from?.pathname || "/";
+
+  // Ngăn chặn người dùng đã đăng nhập truy cập lại trang Login
+  useEffect(() => {
+    if (user) {
+      navigate(user.role === "ADMIN" ? "/admin" : "/", { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

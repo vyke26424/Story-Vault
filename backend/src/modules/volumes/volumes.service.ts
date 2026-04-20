@@ -41,10 +41,12 @@ export class VolumesService {
     }
   }
 
+  // 👉 ĐÃ SỬA: Xử lý phân trang chuẩn (skip, take, count)
   async getAllVolumes(
-    cursorId?: string,
     searchKeyword?: string,
     activeStatus?: string,
+    page: string = '1',
+    limit: string = '10',
   ) {
     const whereCondition: any = {};
 
@@ -52,7 +54,6 @@ export class VolumesService {
       whereCondition.isActive = true;
     } else if (activeStatus === 'false') {
       whereCondition.isActive = false;
-    } else {
     }
 
     if (searchKeyword) {
@@ -63,20 +64,37 @@ export class VolumesService {
       ];
     }
 
-    const data = await this.prisma.volume.findMany({
-      where: whereCondition,
-      take: 20,
-      ...(cursorId && {
-        skip: 1,
-        cursor: { id: cursorId },
-      }),
-      include: {
-        series: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Tính toán phân trang
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const limitNumber = Math.max(1, Number(limit) || 10);
+    const skip = (pageNumber - 1) * limitNumber;
 
-    return data;
+    // Chạy song song 2 lệnh: Lấy dữ liệu VÀ Đếm tổng số để tăng tốc
+    const [data, totalItems] = await Promise.all([
+      this.prisma.volume.findMany({
+        where: whereCondition,
+        skip: skip,
+        take: limitNumber,
+        include: {
+          series: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.volume.count({ where: whereCondition }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limitNumber);
+
+    // Trả về cả dữ liệu lẫn thông tin trang (meta)
+    return {
+      data,
+      meta: {
+        currentPage: pageNumber,
+        totalPages,
+        totalItems,
+        limit: limitNumber,
+      },
+    };
   }
 
   async getVolumeById(volumeId: string) {
@@ -156,23 +174,24 @@ export class VolumesService {
       throw error;
     }
   }
-  // Cập nhật tồn kho hàng loạt từ Excel
-  async bulkImportStock(items: { volumeId: string; quantity: number; note?: string }[]) {
+
+  async bulkImportStock(
+    items: { volumeId: string; quantity: number; note?: string }[],
+  ) {
     return await this.prisma.$transaction(async (tx) => {
       let importedCount = 0;
 
       for (const item of items) {
-        // Kiểm tra xem ID sách có tồn tại không
-        const volume = await tx.volume.findUnique({ where: { id: item.volumeId } });
-        if (!volume) continue; // Bỏ qua nếu ID sai
+        const volume = await tx.volume.findUnique({
+          where: { id: item.volumeId },
+        });
+        if (!volume) continue;
 
-        // 1. Cộng dồn vào kho hiện tại
         await tx.volume.update({
           where: { id: item.volumeId },
           data: { stock: { increment: item.quantity } },
         });
 
-        // 2. Ghi lại lịch sử nhập kho
         await tx.inventoryTransaction.create({
           data: {
             volumeId: item.volumeId,
@@ -181,10 +200,10 @@ export class VolumesService {
             note: item.note || 'Nhập kho hàng loạt bằng Excel',
           },
         });
-        
+
         importedCount++;
       }
-      return importedCount; // Trả về số lượng đã nhập thành công
+      return importedCount;
     });
   }
 }

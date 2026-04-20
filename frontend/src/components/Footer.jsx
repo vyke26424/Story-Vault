@@ -1,7 +1,26 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import useAuthStore from "../store/useAuthStore";
+import axiosClient from "../utils/axiosClient";
+import { BookOpen } from "lucide-react";
 
 const Footer = () => {
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      try {
+        await axiosClient.post("/auth/logout");
+      } catch (error) {
+        console.error("Lỗi đăng xuất:", error);
+      } finally {
+        logout();
+        navigate("/login");
+      }
+    }
+  };
+
   return (
     <footer className="bg-white border-t border-stone-200 pt-10 pb-6 text-sm text-stone-700 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,12 +28,17 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row gap-8 mb-8">
           {/* Cột 1: Thông tin công ty (Có border phải ở Desktop) */}
           <div className="w-full md:w-1/3 md:border-r border-stone-200 pr-4">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-4xl">📚</span>
-              <h2 className="text-3xl font-black text-amber-900 tracking-tighter">
+            <Link
+              to="/"
+              className="flex items-center gap-2 mb-4 cursor-pointer"
+            >
+              <div className="w-10 h-10 bg-sv-pale rounded-xl flex items-center justify-center text-sv-brown border border-sv-tan shrink-0">
+                <BookOpen size={24} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-3xl font-black text-sv-brown tracking-tight">
                 Story Vault.
               </h2>
-            </div>
+            </Link>
             <p className="mb-1 text-stone-600">
               Lầu 5, 387-389 Hai Bà Trưng Quận 3 TP HCM
             </p>
@@ -158,12 +182,21 @@ const Footer = () => {
                 </h3>
                 <ul className="space-y-3">
                   <li>
-                    <Link
-                      to="/login"
-                      className="hover:text-amber-600 transition"
-                    >
-                      Đăng nhập/Tạo mới tài khoản
-                    </Link>
+                    {user ? (
+                      <button
+                        onClick={handleLogout}
+                        className="hover:text-amber-600 transition text-left"
+                      >
+                        Đăng xuất tài khoản
+                      </button>
+                    ) : (
+                      <Link
+                        to="/login"
+                        className="hover:text-amber-600 transition"
+                      >
+                        Đăng nhập/Tạo mới tài khoản
+                      </Link>
+                    )}
                   </li>
                   <li>
                     <Link
@@ -227,6 +260,19 @@ const Footer = () => {
           </span>
           <span className="font-bold text-orange-600 text-2xl">ShopeePay</span>
           <span className="font-black text-green-500 text-3xl">ZaloPay</span>
+          <span className="font-black text-red-600 text-3xl italic">
+            J&T
+            <span className="text-xl ml-1 text-black font-bold not-italic">
+              Express
+            </span>
+          </span>
+          <span className="font-black text-yellow-500 text-3xl">
+            VN<span className="text-blue-800">Post</span>
+          </span>
+          <span className="font-black text-blue-900 text-3xl italic">VISA</span>
+          <span className="font-bold text-red-600 text-2xl">
+            master<span className="text-yellow-500">card</span>
+          </span>
         </div>
 
         {/* Phần Dưới cùng: Copyright */}

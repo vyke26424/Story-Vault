@@ -1,0 +1,3 @@
+
+Chạy thằng này trong terminal /backend để xuất files seed
+npx ts-node prisma/seed/export-series.ts
