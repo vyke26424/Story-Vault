@@ -7,6 +7,8 @@ import {
   ShieldCheck,
   Mail,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import axiosClient from "../../utils/axiosClient";
 
@@ -16,11 +18,32 @@ const UserListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL"); // ALL, CUSTOMER, ADMIN
 
-  const fetchUsers = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10;
+
+  const fetchUsers = async (pageToFetch = currentPage) => {
     try {
       setLoading(true);
-      const res = await axiosClient.get("/admin/user");
+      const res = await axiosClient.get("/admin/user", {
+        params: {
+          search: searchTerm,
+          role: roleFilter === "ALL" ? "" : roleFilter,
+          page: pageToFetch,
+          limit: limit,
+        },
+      });
       setUsers(res.data?.data || res.data || []);
+
+      // Cập nhật Meta phân trang
+      const meta = res.data?.meta || res.meta;
+      if (meta) {
+        setTotalPages(meta.totalPages || 1);
+        setTotalItems(meta.totalItems || 0);
+      } else {
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error("Lỗi lấy danh sách User:", error);
     } finally {
@@ -29,8 +52,19 @@ const UserListPage = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchUsers(1);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, roleFilter]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchUsers(newPage);
+    }
+  };
 
   const handleRoleChange = async (userId, newRole) => {
     if (
@@ -41,21 +75,12 @@ const UserListPage = () => {
           role: newRole,
         });
         alert("Cập nhật quyền thành công!");
-        fetchUsers();
+        fetchUsers(currentPage);
       } catch (error) {
         alert("Có lỗi xảy ra khi đổi quyền!");
       }
     }
   };
-
-  // Logic Lọc: Theo Role và Theo Text Search
-  const filteredUsers = users.filter((user) => {
-    const matchRole = roleFilter === "ALL" || user.role === roleFilter;
-    const matchSearch =
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchRole && matchSearch;
-  });
 
   return (
     <div className="p-6 font-nunito h-full flex flex-col">
@@ -129,8 +154,8 @@ const UserListPage = () => {
                     />
                   </td>
                 </tr>
-              ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
+              ) : users.length > 0 ? (
+                users.map((user) => (
                   <tr
                     key={user.id}
                     className="border-b border-stone-100 hover:bg-stone-50 transition-colors"
@@ -227,6 +252,59 @@ const UserListPage = () => {
             </tbody>
           </table>
         </div>
+
+        {/* COMPONENT PHÂN TRANG */}
+        {!loading && totalPages > 1 && (
+          <div className="bg-white border-t border-stone-200 p-4 flex items-center justify-between mt-auto">
+            <span className="text-sm font-bold text-stone-500">
+              Trang {currentPage} / {totalPages} (Tổng {totalItems} tài khoản)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === 1
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum < currentPage - 2 || pageNum > currentPage + 2)
+                  return null;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-black transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-amber-500 text-stone-900 shadow-sm"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === totalPages
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

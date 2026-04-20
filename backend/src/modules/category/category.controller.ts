@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query, // 👉 Đã thêm
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import {
@@ -30,13 +31,19 @@ export class CategoryController {
     };
   }
 
+  // 👉 ĐÃ SỬA: Đón Query params từ Frontend gửi lên
   @Public()
   @Get()
-  async getAllCategory() {
-    const data = await this.cateService.getAllCategory();
+  async getAllCategory(
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const result = await this.cateService.getAllCategory(search, page, limit);
     return {
       message: 'Lấy toàn bộ category thành công',
-      data: data,
+      data: result.data,
+      meta: result.meta,
     };
   }
 

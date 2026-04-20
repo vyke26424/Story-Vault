@@ -7,7 +7,6 @@ export class OrderService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createOrder(userId: string, dto: CreateOrderDto) {
-    // Sử dụng $transaction để đảm bảo mọi thao tác thành công 100% hoặc hoàn tác tất cả
     return await this.prisma.$transaction(async (tx) => {
       // 1. KIỂM TRA & TRỪ SỐ LƯỢNG TỒN KHO
       for (const item of dto.items) {
@@ -22,13 +21,11 @@ export class OrderService {
           );
         }
 
-        // Trừ kho
         await tx.volume.update({
           where: { id: item.volumeId },
           data: { stock: volume.stock - item.quantity },
         });
 
-        // Tạo log lịch sử xuất kho (InventoryTransaction)
         await tx.inventoryTransaction.create({
           data: {
             volumeId: item.volumeId,
@@ -51,7 +48,7 @@ export class OrderService {
         },
       });
 
-      // 3. TẠO ĐƠN HÀNG (Order + OrderItem + Payment)
+      // 3. TẠO ĐƠN HÀNG
       const order = await tx.order.create({
         data: {
           userId,
@@ -61,7 +58,6 @@ export class OrderService {
           finalAmount: dto.finalAmount,
           note: dto.note,
           status: 'PENDING',
-          // Tạo luôn danh sách sách (OrderItem)
           items: {
             create: dto.items.map((item) => ({
               volumeId: item.volumeId,
@@ -69,7 +65,6 @@ export class OrderService {
               price: item.price,
             })),
           },
-          // Tạo luôn thông tin thanh toán (Payment)
           payment: {
             create: {
               method: dto.paymentMethod,
@@ -90,35 +85,22 @@ export class OrderService {
 
   async getMyOrders(userId: string) {
     return this.prisma.order.findMany({
-      where: {
-        userId: userId,
-      },
+      where: { userId: userId },
       include: {
-        items: {
-          include: {
-            volume: true, // Lấy thông tin sách để hiển thị ảnh và tên
-          },
-        },
-        payment: true, // Lấy thông tin thanh toán để check xem là COD hay VIETQR
+        items: { include: { volume: true } },
+        payment: true,
       },
-      orderBy: {
-        createdAt: 'desc', // Sắp xếp đơn hàng mới nhất lên đầu
-      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async getOrderById(orderId: string, userId: string) {
     const order = await this.prisma.order.findFirst({
-      where: {
-        id: orderId,
-        userId: userId, // Bảo mật: Chỉ lấy đơn của chính user này
-      },
+      where: { id: orderId, userId: userId },
       include: {
-        items: {
-          include: { volume: true },
-        },
+        items: { include: { volume: true } },
         payment: true,
-        address: true, // Quan trọng: Phải móc address ra để in lên hóa đơn
+        address: true,
       },
     });
 
@@ -129,106 +111,117 @@ export class OrderService {
     }
     return order;
   }
+
   async getOrderStats(userId: string) {
-    // Dùng Promise.all để chạy 4 truy vấn song song cho tốc độ bàn thờ
     const [pending, confirmed, shipping, delivered, cancelled, recentOrders] =
       await Promise.all([
-        // Đổi tên biến latestOrder thành recentOrders
-        this.prisma.order.count({
-          where: { userId, status: 'PENDING' },
-        }),
-        this.prisma.order.count({
-          where: { userId, status: 'CONFIRMED' },
-        }),
-        this.prisma.order.count({
-          where: { userId, status: 'SHIPPING' },
-        }),
-        this.prisma.order.count({
-          where: { userId, status: 'DELIVERED' },
-        }),
-        this.prisma.order.count({
-          where: { userId, status: 'CANCELLED' },
-        }),
-        // Lấy 3 đơn hàng gần nhất với thông tin tối giản
+        this.prisma.order.count({ where: { userId, status: 'PENDING' } }),
+        this.prisma.order.count({ where: { userId, status: 'CONFIRMED' } }),
+        this.prisma.order.count({ where: { userId, status: 'SHIPPING' } }),
+        this.prisma.order.count({ where: { userId, status: 'DELIVERED' } }),
+        this.prisma.order.count({ where: { userId, status: 'CANCELLED' } }),
         this.prisma.order.findMany({
           where: { userId },
-          orderBy: { createdAt: 'desc' }, // Lấy đơn mới nhất
+          orderBy: { createdAt: 'desc' },
           take: 3,
           select: {
-            id: true, // Chỉ lấy ID
-            status: true, // Trạng thái
-            finalAmount: true, // Tổng tiền
-            createdAt: true, // Ngày tạo
+            id: true,
+            status: true,
+            finalAmount: true,
+            createdAt: true,
           },
         }),
       ]);
 
-    return {
-      pending,
-      confirmed,
-      shipping,
-      delivered,
-      cancelled,
-      recentOrders,
-    };
+    return { pending, confirmed, shipping, delivered, cancelled, recentOrders };
   }
 
   // ==========================================
   // CÁC HÀM DÀNH CHO ADMIN
   // ==========================================
 
-  async getAllOrdersForAdmin() {
-    return this.prisma.order.findMany({
-      include: {
-        user: { select: { name: true, email: true } },
-        payment: true,
-        address: true,
+  async getAllOrdersForAdmin(
+    pageStr?: string,
+    limitStr?: string,
+    search: string = '',
+  ) {
+    const page = Math.max(1, Number(pageStr) || 1);
+    const limit = Math.max(1, Number(limitStr) || 10);
+    const skip = (page - 1) * limit;
+
+    const whereCondition = search
+      ? {
+          OR: [
+            { id: { contains: search } },
+            {
+              user: {
+                name: { contains: search },
+              },
+            },
+            {
+              user: {
+                email: { contains: search },
+              },
+            },
+          ],
+        }
+      : {};
+
+    const [totalItems, orders] = await Promise.all([
+      this.prisma.order.count({ where: whereCondition }),
+      this.prisma.order.findMany({
+        where: whereCondition,
+        skip: skip,
+        take: limit,
+        include: {
+          user: { select: { name: true, email: true } },
+          payment: true,
+          address: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return {
+      data: orders,
+      meta: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        limit,
       },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async updateOrderStatusByAdmin(orderId: string, newStatus: any) {
-    // 1. Phải include items để lát nữa biết đường mà cộng lại kho
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { items: true },
     });
 
-    if (!order) {
-      throw new BadRequestException('Không tìm thấy đơn hàng này!');
-    }
-
-    // 2. KHIÊN BẢO VỆ: Chặn đổi trạng thái nếu đơn đã HỦY hoặc đã GIAO
-    if (order.status === 'CANCELLED') {
+    if (!order) throw new BadRequestException('Không tìm thấy đơn hàng này!');
+    if (order.status === 'CANCELLED')
       throw new BadRequestException('Đơn hàng đã HỦY');
-    }
-    if (order.status === 'DELIVERED') {
+    if (order.status === 'DELIVERED')
       throw new BadRequestException('Đơn hàng đã GIAO THÀNH CÔNG');
-    }
 
-    // 3. NẾU ADMIN BẤM HỦY ĐƠN -> Hoàn kho & Ghi log (Dùng Transaction để an toàn tuyệt đối)
     if (newStatus === 'CANCELLED') {
       return await this.prisma.$transaction(async (tx) => {
-        // 3.1. Cập nhật trạng thái thành CANCELLED
         const cancelledOrder = await tx.order.update({
           where: { id: orderId },
           data: { status: newStatus },
         });
 
-        // 3.2. Vòng lặp cộng lại kho cho từng cuốn sách
         for (const item of order.items) {
           await tx.volume.update({
             where: { id: item.volumeId },
-            // Dùng increment để cộng dồn vào số lượng kho hiện tại
             data: { stock: { increment: item.quantity } },
           });
 
-          // 3.3. Ghi lại lịch sử để Admin kiểm toán sau này
           await tx.inventoryTransaction.create({
             data: {
               volumeId: item.volumeId,
-              type: 'IMPORT', // Nhập lại vào kho
+              type: 'IMPORT',
               quantity: item.quantity,
               note: `Hoàn kho do Hủy đơn hàng #${orderId.substring(0, 8)}`,
             },
@@ -238,12 +231,12 @@ export class OrderService {
       });
     }
 
-    // 4. Nếu là các trạng thái khác (PENDING -> CONFIRMED -> SHIPPING) thì cứ update bình thường
     return this.prisma.order.update({
       where: { id: orderId },
       data: { status: newStatus },
     });
   }
+
   async updatePaymentStatusByAdmin(orderId: string, status: any) {
     const payment = await this.prisma.payment.findUnique({
       where: { orderId: orderId },
@@ -255,7 +248,6 @@ export class OrderService {
       );
     }
 
-    // Cập nhật trạng thái thanh toán. Nếu là SUCCESS thì tự động ghi nhận giờ thanh toán (paidAt)
     return this.prisma.payment.update({
       where: { orderId: orderId },
       data: {

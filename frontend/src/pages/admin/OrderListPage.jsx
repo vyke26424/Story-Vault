@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Search, Loader2, FileText, Eye } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  FileText,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import axiosClient from "../../utils/axiosClient";
 
 const OrderListPage = () => {
@@ -7,11 +14,31 @@ const OrderListPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchOrders = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10;
+
+  const fetchOrders = async (pageToFetch = currentPage) => {
     try {
       setLoading(true);
-      const res = await axiosClient.get("/admin/orders");
+      const res = await axiosClient.get("/admin/orders", {
+        params: {
+          search: searchTerm,
+          page: pageToFetch,
+          limit: limit,
+        },
+      });
       setOrders(res.data?.data || res.data || []);
+
+      // Cập nhật Meta phân trang
+      const meta = res.data?.meta || res.meta;
+      if (meta) {
+        setTotalPages(meta.totalPages || 1);
+        setTotalItems(meta.totalItems || 0);
+      } else {
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error("Lỗi lấy đơn hàng:", error);
     } finally {
@@ -20,8 +47,19 @@ const OrderListPage = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchOrders(1);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchOrders(newPage);
+    }
+  };
 
   // Đổi trạng thái đơn hàng
   const handleStatusChange = async (orderId, newStatus) => {
@@ -31,7 +69,7 @@ const OrderListPage = () => {
           status: newStatus,
         });
         alert("Đã cập nhật trạng thái!");
-        fetchOrders(); // Refresh lại data
+        fetchOrders(currentPage); // Refresh lại data
       } catch (error) {
         alert("Lỗi cập nhật trạng thái!");
       }
@@ -45,19 +83,12 @@ const OrderListPage = () => {
           status: newStatus,
         });
         alert("Đã cập nhật trạng thái thanh toán!");
-        fetchOrders(); // Refresh lại data
+        fetchOrders(currentPage); // Refresh lại data
       } catch (error) {
         alert("Lỗi cập nhật thanh toán!");
       }
     }
   };
-
-  const filteredOrders = orders.filter(
-    (o) =>
-      o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
 
   return (
     <div className="p-6 font-nunito h-full flex flex-col">
@@ -112,8 +143,8 @@ const OrderListPage = () => {
                     />
                   </td>
                 </tr>
-              ) : filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => (
+              ) : orders.length > 0 ? (
+                orders.map((order) => (
                   <tr
                     key={order.id}
                     className="border-b border-stone-100 hover:bg-stone-50 transition-colors"
@@ -220,6 +251,59 @@ const OrderListPage = () => {
             </tbody>
           </table>
         </div>
+
+        {/* COMPONENT PHÂN TRANG */}
+        {!loading && totalPages > 1 && (
+          <div className="bg-white border-t border-stone-200 p-4 flex items-center justify-between mt-auto">
+            <span className="text-sm font-bold text-stone-500">
+              Trang {currentPage} / {totalPages} (Tổng {totalItems} đơn hàng)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === 1
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum < currentPage - 2 || pageNum > currentPage + 2)
+                  return null;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-black transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-amber-500 text-stone-900 shadow-sm"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === totalPages
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

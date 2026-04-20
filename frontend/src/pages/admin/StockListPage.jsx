@@ -7,6 +7,8 @@ import {
   Download,
   Copy,
   Check,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import axiosClient from "../../utils/axiosClient";
@@ -18,12 +20,31 @@ const StockListPage = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
-  const fetchVolumes = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10;
+
+  const fetchVolumes = async (pageToFetch = currentPage) => {
     try {
       setLoading(true);
-      // Tận dụng lại API lấy danh sách volume có sẵn
-      const res = await axiosClient.get(`/volumes`);
+      const res = await axiosClient.get(`/volumes`, {
+        params: {
+          search: searchTerm,
+          page: pageToFetch,
+          limit: limit,
+        },
+      });
       setVolumes(res.data?.data || res.data || []);
+
+      // Cập nhật Meta phân trang
+      const meta = res.data?.meta || res.meta;
+      if (meta) {
+        setTotalPages(meta.totalPages || 1);
+        setTotalItems(meta.totalItems || 0);
+      } else {
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error("Lỗi lấy danh sách:", error);
     } finally {
@@ -32,16 +53,19 @@ const StockListPage = () => {
   };
 
   useEffect(() => {
-    fetchVolumes();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchVolumes(1);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
-  // Xử lý Lọc dữ liệu trên Frontend
-  const filteredVolumes = volumes.filter(
-    (vol) =>
-      vol.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vol.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vol.series?.title.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchVolumes(newPage);
+    }
+  };
 
   // XỬ LÝ NHẬP EXCEL
   const handleFileUpload = (e) => {
@@ -87,7 +111,7 @@ const StockListPage = () => {
           items: formattedItems,
         });
         alert(res.message || "Nhập kho thành công!");
-        fetchVolumes(); // Load lại số mới
+        fetchVolumes(currentPage); // Load lại số mới ở trang hiện tại
       } catch (error) {
         console.error("Lỗi nhập Excel:", error);
         alert("Có lỗi xảy ra khi đọc file hoặc gửi dữ liệu!");
@@ -200,8 +224,8 @@ const StockListPage = () => {
                     />
                   </td>
                 </tr>
-              ) : filteredVolumes.length > 0 ? (
-                filteredVolumes.map((vol) => (
+              ) : volumes.length > 0 ? (
+                volumes.map((vol) => (
                   <tr
                     key={vol.id}
                     className="border-b border-stone-100 hover:bg-stone-50"
@@ -269,6 +293,59 @@ const StockListPage = () => {
             </tbody>
           </table>
         </div>
+
+        {/* COMPONENT PHÂN TRANG */}
+        {!loading && totalPages > 1 && (
+          <div className="bg-white border-t border-stone-200 p-4 flex items-center justify-between mt-auto">
+            <span className="text-sm font-bold text-stone-500">
+              Trang {currentPage} / {totalPages} (Tổng {totalItems} sách)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === 1
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum < currentPage - 2 || pageNum > currentPage + 2)
+                  return null;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-black transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-amber-500 text-stone-900 shadow-sm"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === totalPages
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

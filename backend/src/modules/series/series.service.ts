@@ -86,11 +86,44 @@ export class SeriesService {
   // CÁC HÀM DÀNH CHO QUẢN TRỊ VIÊN (ADMIN)
   // ==========================================
 
-  async getAllSeriesForAdmin() {
-    return await this.prisma.series.findMany({
-      include: { categories: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  async getAllSeriesForAdmin(
+    pageStr?: string,
+    limitStr?: string,
+    search: string = '',
+  ) {
+    const page = Math.max(1, Number(pageStr) || 1);
+    const limit = Math.max(1, Number(limitStr) || 10);
+    const skip = (page - 1) * limit;
+
+    const whereCondition = search
+      ? {
+          OR: [
+            { title: { contains: search } },
+            { author: { contains: search } },
+          ],
+        }
+      : {};
+
+    const [totalItems, series] = await Promise.all([
+      this.prisma.series.count({ where: whereCondition }),
+      this.prisma.series.findMany({
+        where: whereCondition,
+        skip: skip,
+        take: limit,
+        include: { categories: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return {
+      data: series,
+      meta: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        limit,
+      },
+    };
   }
 
   async getSeriesDeleted() {

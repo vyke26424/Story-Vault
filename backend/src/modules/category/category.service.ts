@@ -43,9 +43,45 @@ export class CategoryService {
     return newCategory;
   }
 
-  async getAllCategory() {
-    const allCategory = await this.prisma.category.findMany();
-    return allCategory;
+  // 👉 ĐÃ SỬA: Thêm Logic Phân trang (skip, take) & Tìm kiếm
+  async getAllCategory(
+    search: string = '',
+    pageStr?: string,
+    limitStr?: string,
+  ) {
+    // 1. Tính toán trang & limit
+    const page = Math.max(1, Number(pageStr) || 1);
+    const limit = Math.max(1, Number(limitStr) || 10);
+    const skip = (page - 1) * limit;
+
+    // 2. Tìm theo tên category hoặc slug
+    const whereCondition = search
+      ? {
+          OR: [{ name: { contains: search } }, { slug: { contains: search } }],
+        }
+      : {};
+
+    // 3. Đếm tổng & Lấy dữ liệu theo phân trang
+    const [totalItems, categories] = await Promise.all([
+      this.prisma.category.count({ where: whereCondition }),
+      this.prisma.category.findMany({
+        where: whereCondition,
+        skip: skip,
+        take: limit,
+        orderBy: { name: 'asc' }, // Sắp xếp A-Z cho ngay ngắn
+      }),
+    ]);
+
+    // 4. Trả về đúng format
+    return {
+      data: categories,
+      meta: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        limit,
+      },
+    };
   }
 
   async deleteCategory(categoryId: string) {

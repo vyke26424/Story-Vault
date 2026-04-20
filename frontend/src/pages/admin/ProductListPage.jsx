@@ -19,7 +19,6 @@ const ProductListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
 
-  // 👉 Thêm State cho Phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -56,7 +55,6 @@ const ProductListPage = () => {
     }
   };
 
-  // 👉 Xử lý khi Gõ Search hoặc Đổi Filter -> ÉP QUAY VỀ TRANG 1
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setCurrentPage(1); // Luôn về trang 1 khi tìm kiếm
@@ -65,12 +63,7 @@ const ProductListPage = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, activeFilter]);
 
-  // 👉 Xử lý khi Đổi Trang (Bấm Next/Prev)
-  useEffect(() => {
-    // Chỉ fetch lại nếu không phải do Search/Filter trigger (để tránh gọi API 2 lần)
-    // Trick: Search/Filter gọi xong set currentPage = 1, Effect này sẽ chạy nhưng ta bọc nó bằng setTimeout ở trên rồi.
-    // Tốt nhất là gọi fetch trực tiếp khi bấm nút chuyển trang.
-  }, [currentPage]);
+  useEffect(() => {}, [currentPage]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -294,7 +287,7 @@ const ProductListPage = () => {
           </table>
         </div>
 
-        {/* 👉 COMPONENT PHÂN TRANG */}
+        {/* COMPONENT PHÂN TRANG */}
         {!loading && totalPages > 1 && (
           <div className="bg-white border-t border-stone-200 p-4 flex items-center justify-between mt-auto">
             <span className="text-sm font-bold text-stone-500">

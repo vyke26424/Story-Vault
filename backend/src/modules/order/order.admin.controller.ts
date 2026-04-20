@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, Query } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Roles } from 'src/decorator/roles/roles.decorator';
 import { Role } from '@prisma/client';
@@ -9,11 +9,21 @@ export class OrderAdminController {
 
   @Roles(Role.ADMIN)
   @Get()
-  async getAllOrders() {
-    const data = await this.orderService.getAllOrdersForAdmin();
+  async getAllOrders(
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const result = await this.orderService.getAllOrdersForAdmin(
+      page,
+      limit,
+      search,
+    );
+
     return {
       message: 'Lấy toàn bộ danh sách đơn hàng thành công',
-      data,
+      data: result.data,
+      meta: result.meta,
     };
   }
 
@@ -29,6 +39,7 @@ export class OrderAdminController {
       data,
     };
   }
+
   @Roles(Role.ADMIN)
   @Patch(':id/payment-status')
   async updatePaymentStatus(

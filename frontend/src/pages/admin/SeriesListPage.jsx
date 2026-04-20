@@ -7,6 +7,8 @@ import {
   RotateCcw,
   Image as ImageIcon,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axiosClient from "../../utils/axiosClient";
@@ -16,12 +18,31 @@ const SeriesListPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchSeries = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10;
+
+  const fetchSeries = async (pageToFetch = currentPage) => {
     try {
       setLoading(true);
-      const res = await axiosClient.get(`/admin/series`);
-      // Backend của sếp trả về cục data nằm trong res.data
-      setSeries(res.data || []);
+      const res = await axiosClient.get(`/admin/series`, {
+        params: {
+          search: searchTerm,
+          page: pageToFetch,
+          limit: limit,
+        },
+      });
+      setSeries(res.data?.data || res.data || []);
+
+      // Cập nhật Meta phân trang
+      const meta = res.data?.meta || res.meta;
+      if (meta) {
+        setTotalPages(meta.totalPages || 1);
+        setTotalItems(meta.totalItems || 0);
+      } else {
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách Series:", error);
     } finally {
@@ -30,21 +51,25 @@ const SeriesListPage = () => {
   };
 
   useEffect(() => {
-    fetchSeries();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchSeries(1);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
-  // Lọc trực tiếp trên Frontend cho nhanh (vì list Series thường không quá lớn)
-  const filteredSeries = series.filter(
-    (s) =>
-      s.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.author?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchSeries(newPage);
+    }
+  };
 
   const handleDelete = async (id, title) => {
     if (window.confirm(`Sếp có chắc muốn ẨN bộ truyện "${title}" không?`)) {
       try {
         await axiosClient.delete(`/admin/series/${id}`);
-        fetchSeries();
+        fetchSeries(currentPage);
       } catch (error) {
         alert("Có lỗi xảy ra khi ẩn bộ truyện!");
       }
@@ -57,7 +82,7 @@ const SeriesListPage = () => {
     ) {
       try {
         await axiosClient.patch(`/admin/series/restore/${id}`);
-        fetchSeries();
+        fetchSeries(currentPage);
       } catch (error) {
         alert("Có lỗi xảy ra khi khôi phục!");
       }
@@ -133,8 +158,8 @@ const SeriesListPage = () => {
                     </p>
                   </td>
                 </tr>
-              ) : filteredSeries.length > 0 ? (
-                filteredSeries.map((s) => (
+              ) : series.length > 0 ? (
+                series.map((s) => (
                   <tr
                     key={s.id}
                     className="border-b border-stone-100 hover:bg-stone-50 transition-colors"
@@ -238,6 +263,59 @@ const SeriesListPage = () => {
             </tbody>
           </table>
         </div>
+
+        {/* COMPONENT PHÂN TRANG */}
+        {!loading && totalPages > 1 && (
+          <div className="bg-white border-t border-stone-200 p-4 flex items-center justify-between mt-auto">
+            <span className="text-sm font-bold text-stone-500">
+              Trang {currentPage} / {totalPages} (Tổng {totalItems} bộ truyện)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === 1
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum < currentPage - 2 || pageNum > currentPage + 2)
+                  return null;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-black transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-amber-500 text-stone-900 shadow-sm"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === totalPages
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

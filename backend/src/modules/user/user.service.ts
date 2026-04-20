@@ -59,12 +59,13 @@ export class UserService {
       data: { password: newHashedPassword },
     });
   }
+
   async uploadAvatar(userId: string, file: Express.Multer.File) {
     const uploaded = await this.cloudinary.uploadAvatar(file);
 
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data: { avatarUrl: uploaded.secure_url }, // 👉 Khớp với schema avatarUrl
+      data: { avatarUrl: uploaded.secure_url }, 
       select: {
         id: true,
         name: true,
@@ -76,25 +77,67 @@ export class UserService {
 
     return user;
   }
+
   // ==========================================
   // CÁC HÀM DÀNH CHO ADMIN
   // ==========================================
 
-  async getAllUsersForAdmin() {
-    return this.prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        avatarUrl: true,
-        createdAt: true,
-        _count: {
-          select: { orders: true }, // Đếm số đơn hàng khách đã mua
+  async getAllUsersForAdmin(
+    search: string = '',
+    roleFilter?: string,
+    pageStr?: string,
+    limitStr?: string,
+  ) {
+    const page = Math.max(1, Number(pageStr) || 1);
+    const limit = Math.max(1, Number(limitStr) || 10);
+    const skip = (page - 1) * limit;
+
+    const whereCondition: any = {};
+
+    // Tìm kiếm theo Tên hoặc Email
+    if (search) {
+      whereCondition.OR = [
+        { name: { contains: search } },
+        { email: { contains: search } },
+      ];
+    }
+
+    // Lọc theo Role (Nếu có và không phải là 'ALL')
+    if (roleFilter && roleFilter !== 'ALL') {
+      whereCondition.role = roleFilter;
+    }
+
+    // Chạy song song đếm tổng số và lấy data
+    const [totalItems, users] = await Promise.all([
+      this.prisma.user.count({ where: whereCondition }),
+      this.prisma.user.findMany({
+        where: whereCondition,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          avatarUrl: true,
+          createdAt: true,
+          _count: {
+            select: { orders: true }, // Đếm số đơn hàng khách đã mua
+          },
         },
+        skip: skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return {
+      data: users,
+      meta: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+        limit,
       },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async updateUserRole(userId: string, role: any) {

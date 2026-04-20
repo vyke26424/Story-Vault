@@ -12,6 +12,7 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import {
@@ -29,9 +30,21 @@ export class SeriesAdminController {
 
   @Roles(Role.ADMIN)
   @Get()
-  async getAllSeries() {
-    const data = await this.seriesService.getAllSeriesForAdmin();
-    return { message: 'Lấy danh sách thành công', data };
+  async getAllSeries(
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const result = await this.seriesService.getAllSeriesForAdmin(
+      page,
+      limit,
+      search,
+    );
+    return {
+      message: 'Lấy danh sách thành công',
+      data: result.data,
+      meta: result.meta,
+    };
   }
 
   @Roles(Role.ADMIN)

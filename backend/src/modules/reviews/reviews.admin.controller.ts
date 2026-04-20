@@ -1,4 +1,4 @@
-import { Controller, Get, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Delete, Param, Query } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { Roles } from 'src/decorator/roles/roles.decorator';
 import { Role } from '@prisma/client';
@@ -9,9 +9,21 @@ export class ReviewsAdminController {
 
   @Roles(Role.ADMIN)
   @Get()
-  async getAllReviews() {
-    const data = await this.reviewsService.getAllReviewsForAdmin();
-    return { message: 'Lấy danh sách đánh giá thành công', data };
+  async getAllReviews(
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const result = await this.reviewsService.getAllReviewsForAdmin(
+      search,
+      page,
+      limit,
+    );
+    return {
+      message: 'Lấy danh sách đánh giá thành công',
+      data: result.data,
+      meta: result.meta,
+    };
   }
 
   @Roles(Role.ADMIN)

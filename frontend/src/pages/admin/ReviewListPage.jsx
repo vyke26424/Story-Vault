@@ -5,6 +5,8 @@ import {
   MessageSquareQuote,
   Star,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import axiosClient from "../../utils/axiosClient";
 
@@ -13,11 +15,31 @@ const ReviewListPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchReviews = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10;
+
+  const fetchReviews = async (pageToFetch = currentPage) => {
     try {
       setLoading(true);
-      const res = await axiosClient.get("/admin/reviews");
+      const res = await axiosClient.get("/admin/reviews", {
+        params: {
+          search: searchTerm,
+          page: pageToFetch,
+          limit: limit,
+        },
+      });
       setReviews(res.data?.data || res.data || []);
+
+      // Cập nhật Meta phân trang
+      const meta = res.data?.meta || res.meta;
+      if (meta) {
+        setTotalPages(meta.totalPages || 1);
+        setTotalItems(meta.totalItems || 0);
+      } else {
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error("Lỗi lấy danh sách đánh giá:", error);
     } finally {
@@ -26,8 +48,19 @@ const ReviewListPage = () => {
   };
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchReviews(1);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchReviews(newPage);
+    }
+  };
 
   const handleDelete = async (id) => {
     if (
@@ -38,20 +71,12 @@ const ReviewListPage = () => {
       try {
         await axiosClient.delete(`/admin/reviews/${id}`);
         alert("Đã xóa đánh giá rác!");
-        fetchReviews();
+        fetchReviews(currentPage);
       } catch (error) {
         alert("Có lỗi xảy ra khi xóa!");
       }
     }
   };
-
-  // Lọc theo Tên sách, Tên khách hoặc Nội dung review
-  const filteredReviews = reviews.filter(
-    (r) =>
-      r.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.series?.title?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
 
   return (
     <div className="p-6 font-nunito h-full flex flex-col">
@@ -107,8 +132,8 @@ const ReviewListPage = () => {
                     />
                   </td>
                 </tr>
-              ) : filteredReviews.length > 0 ? (
-                filteredReviews.map((review) => (
+              ) : reviews.length > 0 ? (
+                reviews.map((review) => (
                   <tr
                     key={review.id}
                     className="border-b border-stone-100 hover:bg-stone-50 transition-colors"
@@ -147,14 +172,17 @@ const ReviewListPage = () => {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         {/* Đổi thành review.series */}
-                        <img 
-                          src={review.series?.coverImage || 'https://via.placeholder.com/50'} 
-                          alt="Cover" 
+                        <img
+                          src={
+                            review.series?.coverImage ||
+                            "https://via.placeholder.com/50"
+                          }
+                          alt="Cover"
                           className="w-12 h-16 object-cover rounded shadow-sm border border-stone-200"
                         />
                         <div>
                           <p className="font-bold text-stone-800 text-sm line-clamp-2">
-                            {review.series?.title || 'Đang cập nhật'}
+                            {review.series?.title || "Đang cập nhật"}
                           </p>
                         </div>
                       </div>
@@ -205,6 +233,59 @@ const ReviewListPage = () => {
             </tbody>
           </table>
         </div>
+
+        {/* COMPONENT PHÂN TRANG */}
+        {!loading && totalPages > 1 && (
+          <div className="bg-white border-t border-stone-200 p-4 flex items-center justify-between mt-auto">
+            <span className="text-sm font-bold text-stone-500">
+              Trang {currentPage} / {totalPages} (Tổng {totalItems} đánh giá)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === 1
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum < currentPage - 2 || pageNum > currentPage + 2)
+                  return null;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-black transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-amber-500 text-stone-900 shadow-sm"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${
+                  currentPage === totalPages
+                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
