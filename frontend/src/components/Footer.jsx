@@ -40,13 +40,13 @@ const Footer = () => {
               </h2>
             </Link>
             <p className="mb-1 text-stone-600">
-              Lầu 5, 387-389 Hai Bà Trưng Quận 3 TP HCM
+              Số 2 Võ Oanh, Phường 25, Quận Bình Thạnh, TP. HCM
             </p>
             <p className="mb-1 text-stone-600 font-semibold">
               Công Ty Cổ Phần Phát Hành Sách - STORY VAULT
             </p>
             <p className="mb-4 text-stone-600">
-              60 - 62 Lê Lợi, Quận 1, TP. HCM, Việt Nam
+              Số 2 Võ Oanh, Phường 25, Quận Bình Thạnh, TP. HCM, Việt Nam
             </p>
             <p className="mb-4 text-stone-500 text-xs leading-relaxed">
               StoryVault.com nhận đặt hàng trực tuyến và giao hàng tận nơi.
@@ -226,7 +226,7 @@ const Footer = () => {
               <div className="flex flex-wrap gap-x-12 gap-y-4 text-stone-600">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">📍</span>
-                  <span>60-62 Lê Lợi, Q.1, TP. HCM</span>
+                  <span>Số 2 Võ Oanh, Q. Bình Thạnh, TP. HCM</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xl">✉️</span>

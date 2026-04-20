@@ -27,6 +27,7 @@ import Footer from "./components/Footer";
 import TokenExpiryPopup from "./components/TokenExpiryPopup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import FloatingFeedback from "./components/FloatingFeedback";
+import NotFoundPage from "./pages/NotFoundPage";
 
 // Import Pages (Khách hàng)
 import HomePage from "./pages/Home";
@@ -123,6 +124,9 @@ function App() {
               element={<OrderSuccessPage />}
             />
           </Route>
+
+          {/* Bắt tất cả đường dẫn sai của Customer -> Ra trang 404 (Có Header/Footer) */}
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         {/* ========================================== */}
@@ -153,6 +157,9 @@ function App() {
             <Route path="users" element={<UserListPage />} />
             <Route path="reviews" element={<ReviewListPage />} />
             <Route path="feedbacks" element={<FeedbackListPage />} />
+
+            {/* Bắt tất cả đường dẫn sai bên trong khu vực Admin */}
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>
       </Routes>

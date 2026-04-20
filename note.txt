@@ -10,21 +10,20 @@ hacker có dùng JS trích xuất cỡ nào cũng không thể lấy được. F
 /auth/refresh và /auth/logout mà không cần mang theo payload.
 
 //Admin
-Nhập kho đang thiếu các sản phẩm khác
-Thêm phân trang cho các trang admin
-Thêm cả Admin Setting
-// 404 Page
-Thêm trang 404 lỗi đường dẫn
+Nhập kho đang thiếu các sản phẩm khác ++
+Thêm phân trang cho các trang admin ++
+// 404 Page 
+Thêm trang 404 lỗi đường dẫn ++
 // Footer
-Sửa Địa chỉ cửa hàng Footer -> Bình thạnh TP HCM
-THêm Vài logo nửa cho đủ 1 hàng dài
+Sửa Địa chỉ cửa hàng Footer -> Bình thạnh TP HCM ++
+THêm Vài logo nửa cho đủ 1 hàng dài ++
 // CartPage
-Thêm hiển thị rõ Giá Gốc, Giá sale
+Thêm hiển thị rõ Giá Gốc, Giá sale ++
 // CheckPage
-Khu vực thông tin "Đơn hàng" cũng thêm giá gốc giá sale 
+Khu vực thông tin "Đơn hàng" cũng thêm giá gốc giá sale  ++
 // Auth
-Người dùng đăng nhập tk 1, back về /login và đăng nhập tài khoản khác -> không đăng xuất + đăng nhập thêm tài khoản -> refreshToken tạo tiếp ko xóa đi khả năng bị lỗi
-// Liên Hệ Feedback ++
-Thêm page này
+Người dùng đăng nhập tk 1, back về /login và đăng nhập tài khoản khác -> không đăng xuất + đăng nhập thêm tài khoản -> refreshToken tạo tiếp ko xóa đi khả năng bị lỗi ++
+// Liên Hệ Feedback
+Thêm page này ++
 // Kiểm tra Responsive
-Kiểm tra lại khi web hiển thị trên các thiếc bị
+Kiểm tra lại khi web hiển thị trên các thiếc bị ++

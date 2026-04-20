@@ -23,7 +23,10 @@ export class OrderService {
 
         await tx.volume.update({
           where: { id: item.volumeId },
-          data: { stock: volume.stock - item.quantity },
+          data: {
+            stock: volume.stock - item.quantity,
+            soldCount: { increment: item.quantity },
+          },
         });
 
         await tx.inventoryTransaction.create({
@@ -215,7 +218,10 @@ export class OrderService {
         for (const item of order.items) {
           await tx.volume.update({
             where: { id: item.volumeId },
-            data: { stock: { increment: item.quantity } },
+            data: {
+              stock: { increment: item.quantity },
+              soldCount: { decrement: item.quantity },
+            },
           });
 
           await tx.inventoryTransaction.create({

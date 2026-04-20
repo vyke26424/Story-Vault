@@ -146,12 +146,25 @@ const CartPage = () => {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-end justify-between gap-4 mt-4">
-                      <span className="font-black text-xl text-sv-brown">
-                        {new Intl.NumberFormat("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        }).format(item.price)}
-                      </span>
+                      <div className="flex flex-col">
+                        {item.originalPrice &&
+                          item.originalPrice > item.price && (
+                            <span className="text-sm font-bold text-sv-brown line-through opacity-70 mb-0.5">
+                              {new Intl.NumberFormat("vi-VN", {
+                                style: "currency",
+                                currency: "VND",
+                              }).format(item.originalPrice)}
+                            </span>
+                          )}
+                        <span
+                          className={`font-black text-xl ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
+                        >
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(item.price)}
+                        </span>
+                      </div>
                       <div className="flex items-center bg-sv-pale rounded-xl border border-sv-tan overflow-hidden">
                         <button
                           onClick={() => handleDecrease(item)}

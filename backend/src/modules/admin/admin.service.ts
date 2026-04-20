@@ -30,7 +30,22 @@ export class AdminService {
       include: { user: { select: { name: true, email: true } } },
     });
 
-    // 👉 LOGIC MỚI: TÍNH DOANH THU 7 NGÀY GẦN NHẤT CHO BIỂU ĐỒ
+    // LẤY TOP 5 SẢN PHẨM BÁN CHẠY NHẤT
+    const topSellingProducts = await this.prisma.volume.findMany({
+      take: 5,
+      orderBy: { soldCount: 'desc' }, // Lấy bán nhiều nhất đẩy lên đầu
+      where: { soldCount: { gt: 0 } }, // Bỏ qua mấy cuốn chưa bán được cuốn nào
+      select: {
+        id: true,
+        title: true,
+        coverImage: true,
+        soldCount: true,
+        price: true,
+        series: { select: { title: true } },
+      },
+    });
+
+    // TÍNH DOANH THU 7 NGÀY GẦN NHẤT CHO BIỂU ĐỒ
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7 ngày tính cả hôm nay
     sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -73,6 +88,7 @@ export class AdminService {
       totalStock,
       recentOrders,
       chartData,
+      topSellingProducts,
     };
   }
 }

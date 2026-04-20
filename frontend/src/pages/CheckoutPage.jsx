@@ -482,12 +482,22 @@ const CheckoutPage = () => {
                     <p className="text-xs text-gray-500 mt-1">
                       SL: {item.quantity}
                     </p>
-                    <p className="font-black text-sv-brown mt-1">
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(item.price * item.quantity)}
-                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      {item.originalPrice && item.originalPrice > item.price && (
+                        <span className="text-xs font-bold text-sv-brown line-through opacity-70">
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(item.originalPrice * item.quantity)}
+                        </span>
+                      )}
+                      <span className={`font-black ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}>
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(item.price * item.quantity)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
