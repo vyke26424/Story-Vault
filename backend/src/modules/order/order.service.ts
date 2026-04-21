@@ -8,27 +8,34 @@ export class OrderService {
 
   async createOrder(userId: string, dto: CreateOrderDto) {
     return await this.prisma.$transaction(async (tx) => {
-      // 1. KIỂM TRA & TRỪ SỐ LƯỢNG TỒN KHO
+      // 1. KIỂM TRA & TRỪ SỐ LƯỢNG TỒN KHO (CHỐNG RACE CONDITION)
       for (const item of dto.items) {
-        const volume = await tx.volume.findUnique({
-          where: { id: item.volumeId },
-        });
-
-        if (!volume) throw new BadRequestException(`Sản phẩm không tồn tại.`);
-        if (volume.stock < item.quantity) {
-          throw new BadRequestException(
-            `Sản phẩm "${volume.title}" không đủ số lượng trong kho.`,
-          );
-        }
-
-        await tx.volume.update({
-          where: { id: item.volumeId },
+        // CÚ PHÁP ATOMIC UPDATE: Ép Database tự trừ thẳng xuống
+        const updatedVolume = await tx.volume.updateMany({
+          where: {
+            id: item.volumeId,
+            stock: { gte: item.quantity }, // ĐIỀU KIỆN SỐNG CÒN: Kho phải >= số lượng muốn mua
+          },
           data: {
-            stock: volume.stock - item.quantity,
+            stock: { decrement: item.quantity }, // Trừ thẳng không cần lấy ra trước
             soldCount: { increment: item.quantity },
           },
         });
 
+        // Nếu count === 0, tức là lệnh update bị từ chối (do hết hàng hoặc ai đó nẫng tay trên)
+        if (updatedVolume.count === 0) {
+          // Query nhẹ lại để lấy tên sách báo lỗi cho người dùng biết cuốn nào hết
+          const volume = await tx.volume.findUnique({
+            where: { id: item.volumeId },
+          });
+
+          if (!volume) throw new BadRequestException(`Sản phẩm không tồn tại.`);
+          throw new BadRequestException(
+            `Sản phẩm "${volume.title}" không đủ số lượng hoặc vừa có khách hàng khác mua mất. Sếp thông cảm nhé!`,
+          );
+        }
+
+        // Ghi Log xuất kho
         await tx.inventoryTransaction.create({
           data: {
             volumeId: item.volumeId,
