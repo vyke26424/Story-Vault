@@ -132,4 +132,13 @@ export class CategoryService {
       data: { ...dataUpdate, slug: currentslug },
     });
   }
+  async getCategoryById(categoryId: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+    if (!category) {
+      throw new NotFoundException('Không tìm thấy thể loại này');
+    }
+    return category;
+  }
 }

@@ -19,7 +19,7 @@ const CategoryFormPage = () => {
     if (isEditMode) {
       // Fetch dữ liệu category cũ
       axiosClient
-        .get(`/categories/${id}`)
+        .get(`/category/${id}`)
         .then((res) => {
           const cat = res.data?.data || res.data;
           setFormData({

@@ -330,4 +330,15 @@ export class SeriesService {
       },
     };
   }
+  async getSeriesByIdAdmin(seriesId: string) {
+    const series = await this.prisma.series.findUnique({
+      where: { id: seriesId },
+      include: { categories: true }, // Bắt buộc phải include cái này để FE tick sẵn hộp checkbox Thể loại
+    });
+
+    if (!series) {
+      throw new NotFoundException('Không tìm thấy dữ liệu bộ truyện này!');
+    }
+    return series;
+  }
 }

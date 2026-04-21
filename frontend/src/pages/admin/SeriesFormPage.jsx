@@ -43,10 +43,8 @@ const SeriesFormPage = () => {
 
   const fetchSeriesDetail = async () => {
     try {
-      // Để lấy chi tiết 1 series, ta tận dụng API public sếp đã viết
-      const resAdmin = await axiosClient.get(`/admin/series`);
-      const allSeries = resAdmin.data || [];
-      const serie = allSeries.find((s) => s.id === id);
+      const res = await axiosClient.get(`/admin/series/${id}`);
+      const serie = res.data?.data || res.data;
 
       if (serie) {
         setFormData({
@@ -71,6 +69,7 @@ const SeriesFormPage = () => {
       }
     } catch (error) {
       console.error(error);
+      alert("Lỗi tải dữ liệu chi tiết!");
       navigate("/admin/series");
     } finally {
       setInitialLoading(false);

@@ -69,4 +69,13 @@ export class CategoryController {
       data,
     };
   }
+  @Public()
+  @Get(':categoryId')
+  async getCategoryById(@Param('categoryId') categoryId: string) {
+    const data = await this.cateService.getCategoryById(categoryId);
+    return {
+      message: 'Lấy thông tin chi tiết thành công',
+      data: data,
+    };
+  }
 }

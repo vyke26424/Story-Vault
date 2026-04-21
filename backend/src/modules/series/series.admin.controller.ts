@@ -90,4 +90,10 @@ export class SeriesAdminController {
     const data = await this.seriesService.restoreSeries(seriesId);
     return { message: 'Khôi phục series thành công', data };
   }
+  @Roles(Role.ADMIN)
+  @Get(':seriesId')
+  async getSeriesById(@Param('seriesId') seriesId: string) {
+    const data = await this.seriesService.getSeriesByIdAdmin(seriesId);
+    return { message: 'Lấy thông tin chi tiết thành công', data };
+  }
 }
