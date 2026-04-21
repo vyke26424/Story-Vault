@@ -82,7 +82,7 @@ model Category {
   id          String  @id @default(uuid())
   name        String
   slug        String  @unique
-  description String?
+  description String? @db.Text
 
   series Series[]
 }
@@ -91,7 +91,7 @@ model Series {
   id          String  @id @default(uuid())
   title       String
   slug        String  @unique
-  description String?
+  description String? @db.Text
   coverImage  String?
 
   author    String?
