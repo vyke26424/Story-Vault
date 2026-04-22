@@ -76,7 +76,8 @@ const AdminLayout = () => {
             className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
             title="Về trang chủ khách hàng"
           >
-            <span className="text-3xl">📚</span>
+            {/* Đổi thành .svg */}
+            <img src="/favicon.svg" alt="Logo Admin" className="h-8 w-auto" />
             {!isCollapsed && (
               <h1 className="text-xl font-black text-white tracking-tight">
                 Story Vault.

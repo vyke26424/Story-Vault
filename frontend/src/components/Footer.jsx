@@ -32,9 +32,8 @@ const Footer = () => {
               to="/"
               className="flex items-center gap-2 mb-4 cursor-pointer"
             >
-              <div className="w-10 h-10 bg-sv-pale rounded-xl flex items-center justify-center text-sv-brown border border-sv-tan shrink-0">
-                <BookOpen size={24} strokeWidth={2.5} />
-              </div>
+              {/* Đổi thành .svg */}
+              <img src="/favicon.svg" alt="Story Vault Logo" className="h-12 w-auto" />
               <h2 className="text-3xl font-black text-sv-brown tracking-tight">
                 Story Vault.
               </h2>

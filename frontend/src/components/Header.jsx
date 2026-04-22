@@ -107,9 +107,9 @@ const Header = () => {
           <div className="flex items-center gap-4 shrink-0">
             {/* ĐÃ FIX: Logo mới đồng bộ với trang Login */}
             <Link to="/" className="flex items-center gap-2 cursor-pointer">
-              <div className="w-9 h-9 bg-sv-pale rounded-xl flex items-center justify-center text-sv-brown border border-sv-tan">
-                <BookOpen size={20} strokeWidth={2.5} />
-              </div>
+              {/* Chỉnh lại h-10 (chiều cao) cho vừa mắt, w-auto để tự kéo giãn */}
+              <img src="/favicon.svg" alt="Story Vault Logo" className="h-10 w-auto" />
+              
               <h1 className="text-2xl font-black text-sv-brown tracking-tight hidden sm:block">
                 Story Vault.
               </h1>
