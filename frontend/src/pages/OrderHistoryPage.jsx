@@ -176,7 +176,10 @@ const OrderHistoryPage = () => {
                   {order.items?.map((item) => (
                     <div key={item.id} className="flex items-center gap-4">
                       {/* Nếu Backend trả về thông tin Volume thì lấy ảnh, không thì xài ảnh placeholder */}
-                      <div className="w-16 h-20 bg-sv-pale rounded-lg border border-sv-tan overflow-hidden shrink-0">
+                      <Link
+                        to={`/series/${item.volume?.series?.slug || item.volume?.seriesId || ""}`}
+                        className="w-16 h-20 bg-sv-pale rounded-lg border border-sv-tan overflow-hidden shrink-0 hover:opacity-80 transition-opacity block"
+                      >
                         {item.volume?.coverImage ? (
                           <img
                             src={item.volume.coverImage}
@@ -188,11 +191,14 @@ const OrderHistoryPage = () => {
                             No Img
                           </div>
                         )}
-                      </div>
+                      </Link>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sv-brown text-sm line-clamp-2">
+                        <Link
+                          to={`/series/${item.volume?.series?.slug || item.volume?.seriesId || ""}`}
+                          className="font-bold text-sv-brown text-sm line-clamp-2 hover:text-amber-600 hover:underline transition-colors"
+                        >
                           {item.volume?.title || `Sản phẩm #${item.volumeId}`}
-                        </h4>
+                        </Link>
                         <p className="text-sm text-gray-500 font-medium mt-1">
                           Số lượng: {item.quantity}
                         </p>

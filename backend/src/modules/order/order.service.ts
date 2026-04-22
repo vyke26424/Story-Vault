@@ -97,7 +97,13 @@ export class OrderService {
     return this.prisma.order.findMany({
       where: { userId: userId },
       include: {
-        items: { include: { volume: true } },
+        items: {
+          include: {
+            volume: {
+              include: { series: true },
+            },
+          },
+        },
         payment: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -108,7 +114,13 @@ export class OrderService {
     const order = await this.prisma.order.findFirst({
       where: { id: orderId, userId: userId },
       include: {
-        items: { include: { volume: true } },
+        items: {
+          include: {
+            volume: {
+              include: { series: true },
+            },
+          },
+        },
         payment: true,
         address: true,
       },

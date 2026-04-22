@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Printer, Loader2 } from "lucide-react";
 import axiosClient from "../utils/axiosClient";
+import useAuthStore from "../store/useAuthStore"; // 👉 THÊM IMPORT NÀY ĐỂ LẤY TÊN KHÁCH
 
 const InvoicePage = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { user } = useAuthStore(); // 👉 KÉO TÊN KHÁCH HÀNG TỪ STORE
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -92,8 +94,9 @@ const InvoicePage = () => {
             THÔNG TIN KHÁCH HÀNG
           </h3>
           <p className="text-gray-800">
+            {/* 👉 ĐÃ FIX: Hiển thị đúng tên người nhận */}
             <span className="font-semibold">Người nhận:</span>{" "}
-            {order.address?.street} (Đại diện)
+            {order.user?.name || user?.name || "Khách hàng"}
           </p>
           <p className="text-gray-800">
             <span className="font-semibold">Điện thoại:</span>{" "}
@@ -108,7 +111,7 @@ const InvoicePage = () => {
             <span className="font-semibold">Hình thức thanh toán:</span>{" "}
             {order.payment?.method === "COD"
               ? "Tiền mặt khi nhận hàng"
-              : "Chuyển khoản VietQR"}
+              : "Chuyển khoản VietQR / Trực tuyến"}
           </p>
         </div>
 
@@ -135,7 +138,12 @@ const InvoicePage = () => {
                 className="border-b border-gray-200 last:border-0"
               >
                 <td className="py-3 px-2 text-gray-800">
-                  {item.volume?.title || "Sản phẩm"}
+                  <Link
+                    to={`/series/${item.volume?.series?.slug || item.volume?.seriesId || ""}`}
+                    className="font-bold hover:text-sv-brown hover:underline transition-colors print:no-underline print:text-gray-800"
+                  >
+                    {item.volume?.title || "Sản phẩm"}
+                  </Link>
                 </td>
                 <td className="py-3 px-2 text-gray-800 text-center">
                   {item.quantity}
