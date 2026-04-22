@@ -81,7 +81,7 @@ const CategoryListPage = () => {
 
   return (
     <div className="p-6 font-nunito h-full flex flex-col">
-      <div className="flex justify-between items-end gap-4 mb-6">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-black text-stone-800 flex items-center gap-3">
             <Tags className="text-amber-500" size={32} /> Thể Loại Truyện
@@ -92,7 +92,7 @@ const CategoryListPage = () => {
         </div>
         <Link
           to="/admin/categories/create"
-          className="bg-amber-500 hover:bg-amber-600 text-stone-900 font-black py-2.5 px-6 rounded-xl transition-all shadow-md flex items-center gap-2"
+          className="bg-amber-500 hover:bg-amber-600 text-stone-900 font-black py-2.5 px-6 rounded-xl transition-all shadow-md flex items-center gap-2 self-start"
         >
           <Plus size={20} /> Thêm Thể Loại
         </Link>

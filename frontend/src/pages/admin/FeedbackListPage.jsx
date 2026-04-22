@@ -99,15 +99,13 @@ const FeedbackListPage = () => {
 
   return (
     <div className="p-6 font-nunito h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-white rounded-xl shadow-sm border border-stone-200 text-sv-brown">
-          <MessageSquare size={24} />
-        </div>
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-black text-stone-800">
-            Quản lý Góp ý & Báo lỗi
+          <h1 className="text-3xl font-black text-stone-800 flex items-center gap-3">
+            <MessageSquare className="text-amber-500" size={32} /> Quản lý Góp ý
+            & Báo lỗi
           </h1>
-          <p className="text-stone-500 text-sm font-medium">
+          <p className="text-stone-500 font-medium">
             Lắng nghe để phát triển Story Vault tốt hơn.
           </p>
         </div>

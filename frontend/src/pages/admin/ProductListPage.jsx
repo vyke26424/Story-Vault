@@ -9,6 +9,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  BookCopy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axiosClient from "../../utils/axiosClient";
@@ -100,8 +101,9 @@ const ProductListPage = () => {
     <div className="p-6 font-nunito h-full flex flex-col">
       <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-black text-stone-800">
-            Quản lý Sách (Volumes)
+          <h1 className="text-3xl font-black text-stone-800 flex items-center gap-3">
+            <BookCopy className="text-amber-500" size={32} /> Quản lý Sách
+            (Volumes)
           </h1>
           <p className="text-stone-500 font-medium">
             Thêm, sửa, xóa các tập truyện trong hệ thống.

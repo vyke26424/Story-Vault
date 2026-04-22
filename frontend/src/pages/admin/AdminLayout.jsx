@@ -10,6 +10,9 @@ import {
   Menu,
   ChevronLeft,
   Tags,
+  PackagePlus,
+  MessageSquareQuote,
+  MessageSquare,
 } from "lucide-react";
 import useAuthStore from "../../store/useAuthStore";
 import axiosClient from "../../utils/axiosClient";
@@ -47,10 +50,10 @@ const AdminLayout = () => {
     },
     { name: "Thể loại", icon: Tags, path: "/admin/categories" },
     { name: "Đơn hàng", icon: ShoppingCart, path: "/admin/orders" },
-    { name: "Kho", icon: ShoppingCart, path: "/admin/stocks" },
-    { name: "Khách hàng", icon: Users, path: "/admin/users" },
-    { name: "Đánh giá", icon: Users, path: "/admin/reviews" },
-    { name: "Phản hồi", icon: Users, path: "/admin/feedbacks" },
+    { name: "Kho", icon: PackagePlus, path: "/admin/stocks" },
+    { name: "Users", icon: Users, path: "/admin/users" },
+    { name: "Đánh giá", icon: MessageSquareQuote, path: "/admin/reviews" },
+    { name: "Phản hồi", icon: MessageSquare, path: "/admin/feedbacks" },
   ];
 
   return (
