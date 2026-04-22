@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import { AlertTriangle, Clock, LogOut, RefreshCw } from "lucide-react";
 import axiosClient from "../utils/axiosClient";
@@ -27,12 +27,30 @@ const parseJwt = (token) => {
 const TokenExpiryPopup = () => {
   const { user, accessToken, logout, setAuth } = useAuthStore();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [showPopup, setShowPopup] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const [isRenewing, setIsRenewing] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleForceLogout = useCallback(() => {
+    // Chặn việc bấm nút hoặc gọi hàm nhiều lần
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
+    // Đẩy request logout chạy ngầm, không block giao diện nếu mạng/API treo
+    axiosClient.post("/auth/logout").catch((error) => {
+      console.error(
+        "⚠️ Lỗi khi gọi API logout, vẫn tiếp tục đăng xuất phía client.",
+        error,
+      );
+    });
+
+    // Xử lý xóa giao diện và đá văng ngay lập tức
+    setShowPopup(false);
+    logout(); // Xóa state ở client (accessToken, user)
+    navigate("/login");
+  }, [isLoggingOut, logout, navigate]);
 
   // 1. NGƯỜI CANH GÁC THỜI GIAN TOKEN
   useEffect(() => {
@@ -69,7 +87,7 @@ const TokenExpiryPopup = () => {
     }
 
     return () => clearTimeout(timeoutId);
-  }, [accessToken]); // Lắng nghe mỗi khi có accessToken mới
+  }, [accessToken, handleForceLogout]); // Lắng nghe mỗi khi có accessToken mới
 
   // 2. ĐỒNG HỒ ĐẾM NGƯỢC 30s
   useEffect(() => {
@@ -83,30 +101,7 @@ const TokenExpiryPopup = () => {
       handleForceLogout();
     }
     return () => clearInterval(interval);
-  }, [showPopup, countdown, isRenewing]);
-
-  const handleForceLogout = async () => {
-    // Chặn việc bấm nút nhiều lần
-    if (isLoggingOut) return;
-    setIsLoggingOut(true);
-
-    try {
-      // Gọi API để server xóa HttpOnly cookie và token trong DB
-      await axiosClient.post("/auth/logout");
-      console.log("✅ Đã gọi API /auth/logout phía server để xóa cookie.");
-    } catch (error) {
-      console.error(
-        "⚠️ Lỗi khi gọi API logout, vẫn tiếp tục đăng xuất phía client.",
-        error,
-      );
-    } finally {
-      setShowPopup(false);
-      logout(); // Xóa state ở client (accessToken, user)
-      if (location.pathname !== "/login") {
-        navigate("/login");
-      }
-    }
-  };
+  }, [showPopup, countdown, isRenewing, handleForceLogout]);
 
   const handleRenewToken = async () => {
     try {

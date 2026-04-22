@@ -72,7 +72,9 @@ const CategoryListPage = () => {
         await axiosClient.delete(`/category/${id}`);
         fetchCategories(currentPage);
       } catch (error) {
-        alert("Có lỗi xảy ra khi xóa!");
+        alert(
+          error.response?.data?.message || "Có lỗi xảy ra khi xóa thể loại!",
+        );
       }
     }
   };

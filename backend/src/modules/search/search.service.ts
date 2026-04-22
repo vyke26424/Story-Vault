@@ -10,25 +10,31 @@ export class SearchService {
    * 1. LIVE SEARCH PREVIEW (Lấy 5 kết quả nhanh)
    * Hiển thị ngay khi người dùng đang gõ ở Header
    */
-  async getPreview(q: string) {
+  async getPreview(q: string, includeOutOfStock: boolean = false) {
     if (!q) return [];
 
     const { searchString, volumeNumber } = this.parseSmartQuery(q);
 
+    const andConditions: Prisma.VolumeWhereInput[] = [
+      searchString
+        ? {
+            OR: [
+              { title: { contains: searchString } },
+              { series: { title: { contains: searchString } } },
+            ],
+          }
+        : {},
+      volumeNumber ? { volumeNumber: volumeNumber } : {},
+    ];
+
+    if (!includeOutOfStock) {
+      andConditions.push({ stock: { gt: 0 } });
+    }
+
     return this.prisma.volume.findMany({
       where: {
         isActive: true,
-        AND: [
-          searchString
-            ? {
-                OR: [
-                  { title: { contains: searchString } },
-                  { series: { title: { contains: searchString } } },
-                ],
-              }
-            : {},
-          volumeNumber ? { volumeNumber: volumeNumber } : {},
-        ],
+        AND: andConditions,
       },
       include: {
         series: {
@@ -42,7 +48,16 @@ export class SearchService {
 
   async getFullSearch(query: any) {
     // 1. Lấy tất cả tham số từ Frontend gửi lên
-    const { q, sort, type, minPrice, maxPrice, page = 1, limit = 12 } = query;
+    const {
+      q,
+      sort,
+      type,
+      minPrice,
+      maxPrice,
+      page = 1,
+      limit = 12,
+      includeOutOfStock,
+    } = query;
     const {
       searchString,
       price: parsedPrice,
@@ -97,6 +112,11 @@ export class SearchService {
           ...(finalMax ? { lte: finalMax } : {}),
         },
       });
+    }
+
+    // Lọc theo Tồn kho (Mặc định ẩn sản phẩm hết hàng nếu không có yêu cầu)
+    if (includeOutOfStock !== 'true' && includeOutOfStock !== true) {
+      andConditions.push({ stock: { gt: 0 } });
     }
 
     // Xử lý Sắp xếp

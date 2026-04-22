@@ -71,7 +71,8 @@ const SearchPage = () => {
       const min = searchParams.get("min") || "";
       const max = searchParams.get("max") || "";
 
-      let endpoint = `/search?q=${encodeURIComponent(query)}&sort=${sortBy}&page=${currentPage}&limit=12`;
+      // Thêm flag includeOutOfStock để báo backend trả về cả sản phẩm hết hàng
+      let endpoint = `/search?q=${encodeURIComponent(query)}&sort=${sortBy}&page=${currentPage}&limit=12&includeOutOfStock=true`;
       if (selectedType) endpoint += `&type=${selectedType}`;
       if (min) endpoint += `&minPrice=${min}`;
       if (max) endpoint += `&maxPrice=${max}`;
@@ -148,6 +149,8 @@ const SearchPage = () => {
 
   const handleAddToCart = (e, volume) => {
     e.preventDefault();
+    e.stopPropagation();
+    if (volume.stock <= 0) return;
     if (addToCart) {
       addToCart({ ...volume, quantity: 1 });
       alert(`Đã thêm vào giỏ hàng!`);
@@ -309,60 +312,71 @@ const SearchPage = () => {
             ) : results.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {results.map((item) => (
-                    <Link
-                      key={item.id}
-                      to={`/series/${item.series?.slug || item.slug}`}
-                      className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col"
-                    >
-                      <div className="relative aspect-[2/3] overflow-hidden bg-sv-pale">
-                        <img
-                          src={
-                            item.coverImage ||
-                            "https://via.placeholder.com/300x450"
-                          }
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          alt={item.title}
-                        />
-                      </div>
-                      <div className="p-4 flex flex-col flex-1">
-                        <h3 className="font-black text-sv-brown text-sm sm:text-base line-clamp-2 mb-2 group-hover:opacity-80 transition-opacity">
-                          {item.series?.title || item.title}{" "}
-                          {item.volumeNumber
-                            ? `- Tập ${item.volumeNumber}`
-                            : ""}
-                        </h3>
-                        <div className="mt-auto flex items-end justify-between">
-                          <div className="flex flex-col">
-                            {item.originalPrice &&
-                              item.originalPrice > item.price && (
-                                <p className="text-xs font-bold text-sv-brown line-through opacity-70 mb-0.5">
-                                  {new Intl.NumberFormat("vi-VN").format(
-                                    item.originalPrice,
-                                  )}
-                                  đ
-                                </p>
-                              )}
-                            <p
-                              className={`font-black text-lg ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
-                            >
-                              {new Intl.NumberFormat("vi-VN").format(
-                                item.price || 0,
-                              )}
-                              đ
-                            </p>
-                          </div>
-                          <button
-                            onClick={(e) => handleAddToCart(e, item)}
-                            className="w-10 h-10 rounded-full bg-sv-wheat text-sv-brown flex items-center justify-center hover:bg-sv-brown hover:text-white transition-colors shrink-0"
-                            title="Thêm vào giỏ hàng"
-                          >
-                            <ShoppingCart size={18} strokeWidth={2.5} />
-                          </button>
+                  {results.map((item) => {
+                    const isOutOfStock = item.stock <= 0;
+                    return (
+                      <Link
+                        key={item.id}
+                        to={`/series/${item.series?.slug || item.slug}`}
+                        className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col"
+                      >
+                        <div className="relative aspect-[2/3] overflow-hidden bg-sv-pale">
+                          <img
+                            src={
+                              item.coverImage ||
+                              "https://via.placeholder.com/300x450"
+                            }
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            alt={item.title}
+                          />
+                          {isOutOfStock && (
+                            <div className="absolute top-2 left-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10">
+                              HẾT HÀNG
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                        <div className="p-4 flex flex-col flex-1">
+                          <h3 className="font-black text-sv-brown text-sm sm:text-base line-clamp-2 mb-2 group-hover:opacity-80 transition-opacity">
+                            {item.series?.title || item.title}{" "}
+                            {item.volumeNumber
+                              ? `- Tập ${item.volumeNumber}`
+                              : ""}
+                          </h3>
+                          <div className="mt-auto flex items-end justify-between">
+                            <div className="flex flex-col">
+                              {item.originalPrice &&
+                                item.originalPrice > item.price && (
+                                  <p className="text-xs font-bold text-sv-brown line-through opacity-70 mb-0.5">
+                                    {new Intl.NumberFormat("vi-VN").format(
+                                      item.originalPrice,
+                                    )}
+                                    đ
+                                  </p>
+                                )}
+                              <p
+                                className={`font-black text-lg ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
+                              >
+                                {new Intl.NumberFormat("vi-VN").format(
+                                  item.price || 0,
+                                )}
+                                đ
+                              </p>
+                            </div>
+                            <button
+                              disabled={isOutOfStock}
+                              onClick={(e) => handleAddToCart(e, item)}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${isOutOfStock ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-sv-wheat text-sv-brown hover:bg-sv-brown hover:text-white"}`}
+                              title={
+                                isOutOfStock ? "Hết hàng" : "Thêm vào giỏ hàng"
+                              }
+                            >
+                              <ShoppingCart size={18} strokeWidth={2.5} />
+                            </button>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 {/* THANH PHÂN TRANG */}

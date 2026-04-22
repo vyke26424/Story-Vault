@@ -211,6 +211,11 @@ const HomePage = () => {
                           <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm">
                             HOT
                           </div>
+                          {isOutOfStock && (
+                            <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10">
+                              HẾT HÀNG
+                            </div>
+                          )}
                         </div>
                         <div className="p-3 flex flex-col flex-1">
                           <h3
@@ -306,6 +311,11 @@ const HomePage = () => {
                           alt={item.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
+                        {isOutOfStock && (
+                          <div className="absolute top-2 left-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10">
+                            HẾT HÀNG
+                          </div>
+                        )}
                       </div>
                       <div className="p-3 flex flex-col flex-1">
                         <h3

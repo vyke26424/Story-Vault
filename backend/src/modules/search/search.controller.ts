@@ -11,8 +11,14 @@ export class SearchController {
   @Public()
   @Throttle({ default: { limit: 30, ttl: 10000 } })
   @Get('preview')
-  async getPreview(@Query('q') q: string) {
-    const data = await this.searchService.getPreview(q);
+  async getPreview(
+    @Query('q') q: string,
+    @Query('includeOutOfStock') includeOutOfStock?: string,
+  ) {
+    const data = await this.searchService.getPreview(
+      q,
+      includeOutOfStock === 'true',
+    );
     return {
       message: 'Lấy kết quả xem trước thành công',
       data: data,

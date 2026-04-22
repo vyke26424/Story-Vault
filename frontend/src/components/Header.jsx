@@ -57,7 +57,7 @@ const Header = () => {
         try {
           // Gọi API tìm kiếm xem trước (Lấy 5 cuốn truyện)
           const res = await axiosClient.get(
-            `/search/preview?q=${encodeURIComponent(searchTerm)}`,
+            `/search/preview?q=${encodeURIComponent(searchTerm)}&includeOutOfStock=true`,
           );
           setSearchResults(res.data || []);
         } catch (error) {
@@ -108,8 +108,12 @@ const Header = () => {
             {/* ĐÃ FIX: Logo mới đồng bộ với trang Login */}
             <Link to="/" className="flex items-center gap-2 cursor-pointer">
               {/* Chỉnh lại h-10 (chiều cao) cho vừa mắt, w-auto để tự kéo giãn */}
-              <img src="/favicon.svg" alt="Story Vault Logo" className="h-10 w-auto" />
-              
+              <img
+                src="/favicon.svg"
+                alt="Story Vault Logo"
+                className="h-10 w-auto"
+              />
+
               <h1 className="text-2xl font-black text-sv-brown tracking-tight hidden sm:block">
                 Story Vault.
               </h1>
@@ -211,42 +215,61 @@ const Header = () => {
                 ) : searchResults.length > 0 ? (
                   <div className="flex flex-col max-h-[400px] overflow-y-auto custom-scrollbar">
                     {/* Danh sách 5 sản phẩm xem trước */}
-                    {searchResults.map((item) => (
-                      <Link
-                        key={item.id}
-                        to={`/series/${item.series?.slug || item.slug}`}
-                        onClick={() => setShowSearchDropdown(false)}
-                        className="flex items-center gap-4 p-3 hover:bg-sv-pale border-b border-sv-pale transition-colors last:border-0"
-                      >
-                        <div className="w-12 h-16 shrink-0 bg-gray-200 rounded-md overflow-hidden border border-sv-tan">
-                          {item.coverImage ? (
-                            <img
-                              src={item.coverImage}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                              No Img
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1 text-left">
-                          <h4 className="text-sm font-bold text-sv-brown line-clamp-1">
-                            {item.title || item.series?.title}
-                          </h4>
-                          <p className="text-xs text-gray-500 font-medium">
-                            Tập {item.volumeNumber} •{" "}
-                            {item.series?.author || "Đang cập nhật"}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="text-sm font-black text-sv-brown">
-                            {new Intl.NumberFormat("vi-VN").format(item.price)}đ
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
+                    {searchResults.map((item) => {
+                      const isOutOfStock = item.stock <= 0;
+                      return (
+                        <Link
+                          key={item.id}
+                          to={`/series/${item.series?.slug || item.slug}`}
+                          onClick={() => setShowSearchDropdown(false)}
+                          className="flex items-center gap-4 p-3 hover:bg-sv-pale border-b border-sv-pale transition-colors last:border-0"
+                        >
+                          <div className="w-12 h-16 shrink-0 bg-gray-200 rounded-md overflow-hidden border border-sv-tan relative">
+                            {item.coverImage ? (
+                              <img
+                                src={item.coverImage}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                                No Img
+                              </span>
+                            )}
+                            {isOutOfStock && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <span className="text-[10px] font-black text-white text-center leading-tight tracking-tighter">
+                                  HẾT
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 text-left">
+                            <h4 className="text-sm font-bold text-sv-brown line-clamp-1">
+                              {item.title || item.series?.title}
+                            </h4>
+                            <p className="text-xs text-gray-500 font-medium">
+                              Tập {item.volumeNumber} •{" "}
+                              {item.series?.author || "Đang cập nhật"}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            {isOutOfStock ? (
+                              <span className="text-xs font-black text-gray-400">
+                                HẾT HÀNG
+                              </span>
+                            ) : (
+                              <span className="text-sm font-black text-sv-brown">
+                                {new Intl.NumberFormat("vi-VN").format(
+                                  item.price,
+                                )}
+                                đ
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      );
+                    })}
 
                     {/* Nút Xem tất cả kết quả */}
                     <button

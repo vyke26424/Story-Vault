@@ -312,6 +312,11 @@ const SeriesDetailPage = () => {
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
                           <ZoomIn className="text-white opacity-0 group-hover:opacity-100 w-8 h-8" />
                         </div>
+                        {isOutOfStock && (
+                          <div className="absolute top-2 left-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10 pointer-events-none">
+                            HẾT HÀNG
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col flex-1 py-0.5 min-w-0">
                         <h3 className="font-black text-sv-brown text-base sm:text-lg line-clamp-2 leading-snug mb-1">
@@ -583,6 +588,11 @@ const SeriesDetailPage = () => {
                         alt={volume.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
+                      {isOutOfStock && (
+                        <div className="absolute top-2 left-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10 pointer-events-none">
+                          HẾT HÀNG
+                        </div>
+                      )}
                     </div>
                     <div className="p-3 flex flex-col flex-1">
                       <h3 className="font-black text-sv-brown text-sm line-clamp-2 mb-1 group-hover:opacity-80 transition-colors">
