@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 import {
   BadRequestException,
   Injectable,
@@ -41,7 +42,6 @@ export class VolumesService {
     }
   }
 
-  // 👉 ĐÃ SỬA: Xử lý phân trang chuẩn (skip, take, count)
   async getAllVolumes(
     searchKeyword?: string,
     activeStatus?: string,
@@ -58,6 +58,7 @@ export class VolumesService {
 
     if (searchKeyword) {
       whereCondition.OR = [
+        { id: { contains: searchKeyword } },
         { title: { contains: searchKeyword } },
         { isbn: { contains: searchKeyword } },
         { series: { title: { contains: searchKeyword } } },
@@ -180,12 +181,27 @@ export class VolumesService {
   ) {
     return await this.prisma.$transaction(async (tx) => {
       let importedCount = 0;
+      const errors: string[] = [];
 
-      for (const item of items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        if (item.quantity <= 0) {
+          errors.push(
+            `- Dòng ${i + 1}: Số lượng nhập phải lớn hơn 0 (ID: ${item.volumeId})`,
+          );
+          continue;
+        }
+
         const volume = await tx.volume.findUnique({
           where: { id: item.volumeId },
         });
-        if (!volume) continue;
+        if (!volume) {
+          errors.push(
+            `- Dòng ${i + 1}: Không tìm thấy sách với ID ${item.volumeId}`,
+          );
+          continue;
+        }
 
         await tx.volume.update({
           where: { id: item.volumeId },
@@ -203,7 +219,67 @@ export class VolumesService {
 
         importedCount++;
       }
+
+      // Nếu có bất kì lỗi nào, ném Exception để Rollback giao dịch
+      if (errors.length > 0) {
+        throw new BadRequestException(
+          'Vui lòng kiểm tra lại file Excel:\n' + errors.join('\n'),
+        );
+      }
+
       return importedCount;
     });
+  }
+  async getInventoryTransactions(
+    searchKeyword?: string,
+    type?: string,
+    page: string = '1',
+    limit: string = '10',
+  ) {
+    const whereCondition: any = {};
+
+    // Lọc theo loại hình: IMPORT, EXPORT, ADJUST
+    if (type && type !== 'ALL') {
+      whereCondition.type = type;
+    }
+
+    // Tìm theo mã sách, ghi chú, hoặc tên sách
+    if (searchKeyword) {
+      whereCondition.OR = [
+        { volumeId: { contains: searchKeyword } },
+        { note: { contains: searchKeyword } },
+        { volume: { title: { contains: searchKeyword } } },
+        { volume: { series: { title: { contains: searchKeyword } } } },
+      ];
+    }
+
+    const pageNumber = Math.max(1, Number(page) || 1);
+    const limitNumber = Math.max(1, Number(limit) || 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [data, totalItems] = await Promise.all([
+      this.prisma.inventoryTransaction.findMany({
+        where: whereCondition,
+        skip: skip,
+        take: limitNumber,
+        include: {
+          volume: {
+            include: { series: true }, // Lấy thông tin sách và truyện để FE hiển thị
+          },
+        },
+        orderBy: { createdAt: 'desc' }, // Mới nhất lên đầu
+      }),
+      this.prisma.inventoryTransaction.count({ where: whereCondition }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalItems / limitNumber),
+        totalItems,
+        limit: limitNumber,
+      },
+    };
   }
 }

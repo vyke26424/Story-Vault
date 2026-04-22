@@ -68,6 +68,27 @@ export class VolumesController {
     };
   }
 
+  @Roles(Role.ADMIN)
+  @Get('transactions')
+  async getInventoryTransactions(
+    @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const result = await this.volumesService.getInventoryTransactions(
+      search,
+      type,
+      page,
+      limit,
+    );
+    return {
+      message: 'Lấy lịch sử giao dịch kho thành công',
+      data: result.data,
+      meta: result.meta,
+    };
+  }
+
   @Get(':volumeId')
   async findOne(@Param('volumeId') volumeId: string) {
     const data = await this.volumesService.getVolumeById(volumeId);
