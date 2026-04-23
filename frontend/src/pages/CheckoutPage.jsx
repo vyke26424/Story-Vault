@@ -480,11 +480,11 @@ const CheckoutPage = () => {
                       className="font-bold text-sv-brown text-sm line-clamp-2 leading-snug"
                       title={
                         item.title ||
-                        `${item.series?.title} - Tập ${item.volumeNumber}`
+                        `${item.series?.title || item.seriesTitle || "Truyện"} - Tập ${item.volumeNumber}`
                       }
                     >
                       {item.title ||
-                        `${item.series?.title} - Tập ${item.volumeNumber}`}
+                        `${item.series?.title || item.seriesTitle || "Truyện"} - Tập ${item.volumeNumber}`}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
                       SL: {item.quantity}

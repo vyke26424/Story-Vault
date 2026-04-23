@@ -128,15 +128,15 @@ const CartPage = () => {
                     <div>
                       <div className="flex justify-between items-start gap-2 mb-1">
                         <Link
-                          to={`/series/${item.series?.slug || item.slug || ""}`}
+                          to={`/series/${item.series?.slug || item.seriesSlug || item.slug || ""}`}
                           className="font-black text-sv-brown text-lg line-clamp-2 hover:opacity-80 transition-colors"
                           title={
                             item.title ||
-                            `${item.series?.title} - Tập ${item.volumeNumber}`
+                            `${item.series?.title || item.seriesTitle || "Truyện"} - Tập ${item.volumeNumber}`
                           }
                         >
                           {item.title ||
-                            `${item.series?.title} - Tập ${item.volumeNumber}`}
+                            `${item.series?.title || item.seriesTitle || "Truyện"} - Tập ${item.volumeNumber}`}
                         </Link>
                         <button
                           onClick={() => removeFromCart(item.id)}

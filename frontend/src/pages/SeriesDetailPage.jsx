@@ -392,8 +392,13 @@ const SeriesDetailPage = () => {
                                 // Lấy số lượng từ state (mặc định 1), truyền vào Cart
                                 const qtyToAdd = quantities[volume.id] || 1;
                                 alert(
-                                  addToCart({ ...volume, quantity: qtyToAdd })
-                                    .message,
+                                addToCart({
+                                  ...volume,
+                                  seriesTitle: series.title,
+                                  seriesSlug: series.slug,
+                                  series: { title: series.title, slug: series.slug },
+                                  quantity: qtyToAdd,
+                                }).message,
                                 );
                               }}
                               className={`p-2.5 rounded-xl flex-1 flex items-center justify-center gap-2 transition-all shadow-sm ${isOutOfStock ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-sv-brown text-white hover:bg-opacity-90 hover:shadow-md hover:-translate-y-0.5"}`}
