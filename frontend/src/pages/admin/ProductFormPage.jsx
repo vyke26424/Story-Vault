@@ -24,11 +24,11 @@ const ProductFormPage = () => {
 
   const [formData, setFormData] = useState({
     seriesId: "",
-    volumeNumber: 1,
+    volumeNumber: "",
     title: "",
-    price: 0,
+    price: "",
     originalPrice: "",
-    stock: 0,
+    stock: "",
     isbn: "",
     publishDate: "",
     isActive: true,
@@ -57,11 +57,11 @@ const ProductFormPage = () => {
       if (vol) {
         setFormData({
           seriesId: vol.seriesId || "",
-          volumeNumber: vol.volumeNumber || 1,
+          volumeNumber: vol.volumeNumber ?? "",
           title: vol.title || "",
-          price: vol.price || 0,
-          originalPrice: vol.originalPrice || "",
-          stock: vol.stock || 0,
+          price: vol.price ?? "",
+          originalPrice: vol.originalPrice ?? "",
+          stock: vol.stock ?? "",
           isbn: vol.isbn || "",
           publishDate: vol.publishDate
             ? new Date(vol.publishDate).toISOString().split("T")[0]
@@ -238,7 +238,8 @@ const ProductFormPage = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      volumeNumber: Number(e.target.value),
+                      volumeNumber:
+                        e.target.value === "" ? "" : Number(e.target.value),
                     })
                   }
                   className="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 font-bold"
@@ -292,7 +293,11 @@ const ProductFormPage = () => {
                   required
                   value={formData.price}
                   onChange={(e) =>
-                    setFormData({ ...formData, price: Number(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      price:
+                        e.target.value === "" ? "" : Number(e.target.value),
+                    })
                   }
                   className="w-full bg-stone-50 border border-stone-200 text-amber-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 font-black text-lg"
                 />
@@ -308,9 +313,8 @@ const ProductFormPage = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      originalPrice: e.target.value
-                        ? Number(e.target.value)
-                        : "",
+                      originalPrice:
+                        e.target.value === "" ? "" : Number(e.target.value),
                     })
                   }
                   className="w-full bg-stone-50 border border-stone-200 text-stone-500 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 font-bold line-through decoration-stone-400"
@@ -329,7 +333,11 @@ const ProductFormPage = () => {
                   required
                   value={formData.stock}
                   onChange={(e) =>
-                    setFormData({ ...formData, stock: Number(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      stock:
+                        e.target.value === "" ? "" : Number(e.target.value),
+                    })
                   }
                   className="w-full bg-stone-50 border border-stone-200 text-stone-800 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500 font-bold"
                 />
