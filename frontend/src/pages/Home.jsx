@@ -220,12 +220,13 @@ const HomePage = () => {
                         <div className="p-3 flex flex-col flex-1">
                           <h3
                             className="font-black text-sv-brown text-sm line-clamp-2 mb-1 group-hover:opacity-80 transition-colors"
-                            title={item.series?.title || item.title}
+                            title={
+                              item.title ||
+                              `${item.series?.title} - Tập ${item.volumeNumber}`
+                            }
                           >
-                            {item.series?.title || item.title}{" "}
-                            {item.volumeNumber
-                              ? `- Tập ${item.volumeNumber}`
-                              : ""}
+                            {item.title ||
+                              `${item.series?.title} - Tập ${item.volumeNumber}`}
                           </h3>
                           <p className="text-xs text-gray-500 font-bold mb-2">
                             Đã bán: {item.soldCount || 0}
@@ -320,12 +321,13 @@ const HomePage = () => {
                       <div className="p-3 flex flex-col flex-1">
                         <h3
                           className="font-black text-sv-brown text-sm line-clamp-2 mb-1 group-hover:opacity-80 transition-colors"
-                          title={item.series?.title || item.title}
+                          title={
+                            item.title ||
+                            `${item.series?.title} - Tập ${item.volumeNumber}`
+                          }
                         >
-                          {item.series?.title || item.title}{" "}
-                          {item.volumeNumber
-                            ? `- Tập ${item.volumeNumber}`
-                            : ""}
+                          {item.title ||
+                            `${item.series?.title} - Tập ${item.volumeNumber}`}
                         </h3>
                         <div className="mt-auto flex items-end justify-between pt-2">
                           <div className="flex flex-col min-w-0">

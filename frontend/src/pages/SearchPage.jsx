@@ -336,11 +336,15 @@ const SearchPage = () => {
                           )}
                         </div>
                         <div className="p-4 flex flex-col flex-1">
-                          <h3 className="font-black text-sv-brown text-sm sm:text-base line-clamp-2 mb-2 group-hover:opacity-80 transition-opacity">
-                            {item.series?.title || item.title}{" "}
-                            {item.volumeNumber
-                              ? `- Tập ${item.volumeNumber}`
-                              : ""}
+                          <h3
+                            className="font-black text-sv-brown text-sm sm:text-base line-clamp-2 mb-2 group-hover:opacity-80 transition-opacity"
+                            title={
+                              item.title ||
+                              `${item.series?.title} - Tập ${item.volumeNumber}`
+                            }
+                          >
+                            {item.title ||
+                              `${item.series?.title} - Tập ${item.volumeNumber}`}
                           </h3>
                           <div className="mt-auto flex items-end justify-between">
                             <div className="flex flex-col">
