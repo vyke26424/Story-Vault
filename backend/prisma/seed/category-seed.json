@@ -1,0 +1,62 @@
+[
+  {
+    "id": "0c99c30c-cb1c-4b35-8fa3-7f21f06e01d4",
+    "name": "Đời Thường",
+    "slug": "doi-thuong",
+    "description": "Mô tả cho thể loại Đời Thường"
+  },
+  {
+    "id": "0e1b9ec2-dc1b-4a6b-b340-1bddba982d02",
+    "name": "Tình Cảm",
+    "slug": "tinh-cam",
+    "description": "Mô tả cho thể loại Tình Cảm"
+  },
+  {
+    "id": "22b67cb5-dad5-4709-aec2-e512fd962d3b",
+    "name": "Trinh Thám",
+    "slug": "trinh-tham",
+    "description": "Mô tả cho thể loại Trinh Thám"
+  },
+  {
+    "id": "5658e043-143b-4cbe-aabf-73a98bfcf713",
+    "name": "Kinh Dị",
+    "slug": "kinh-di",
+    "description": "Mô tả cho thể loại Kinh Dị"
+  },
+  {
+    "id": "8328b94e-3f6e-4d53-a426-a9d3caae8942",
+    "name": "Kỳ Ảo",
+    "slug": "ky-ao",
+    "description": "Mô tả cho thể loại Kỳ Ảo"
+  },
+  {
+    "id": "91f9a2a5-f421-4eb0-a7f9-3a7eb97cbc37",
+    "name": "Hài Hước",
+    "slug": "hai-huoc",
+    "description": "Mô tả cho thể loại Hài Hước"
+  },
+  {
+    "id": "92bd586e-65f5-40c0-93a9-d2f6bf10222a",
+    "name": "Viễn Tưởng",
+    "slug": "vien-tuong",
+    "description": "Mô tả cho thể loại Viễn Tưởng"
+  },
+  {
+    "id": "a71d1d74-3303-4656-9e88-0f4da14015fb",
+    "name": "Phiêu Lưu",
+    "slug": "phieu-luu",
+    "description": "Mô tả cho thể loại Phiêu Lưu"
+  },
+  {
+    "id": "dddc8de6-eee5-4d66-ab9e-d09b4c4867cf",
+    "name": "Hành Động",
+    "slug": "hanh-dong",
+    "description": "Mô tả cho thể loại Hành Động"
+  },
+  {
+    "id": "e1c7b20c-7443-4227-b7e6-699f7f696828",
+    "name": "Học Đường",
+    "slug": "hoc-duong",
+    "description": "Mô tả cho thể loại Học Đường"
+  }
+]
