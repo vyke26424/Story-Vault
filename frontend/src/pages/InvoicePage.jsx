@@ -141,8 +141,13 @@ const InvoicePage = () => {
                   <Link
                     to={`/series/${item.volume?.series?.slug || item.volume?.seriesId || ""}`}
                     className="font-bold hover:text-sv-brown hover:underline transition-colors print:no-underline print:text-gray-800"
+                    title={
+                      item.volume?.title ||
+                      `${item.volume?.series?.title || "Truyện"} - Tập ${item.volume?.volumeNumber}`
+                    }
                   >
-                    {item.volume?.title || "Sản phẩm"}
+                    {item.volume?.title ||
+                      `${item.volume?.series?.title || "Truyện"} - Tập ${item.volume?.volumeNumber}`}
                   </Link>
                 </td>
                 <td className="py-3 px-2 text-gray-800 text-center">

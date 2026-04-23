@@ -196,8 +196,13 @@ const OrderHistoryPage = () => {
                         <Link
                           to={`/series/${item.volume?.series?.slug || item.volume?.seriesId || ""}`}
                           className="font-bold text-sv-brown text-sm line-clamp-2 hover:text-amber-600 hover:underline transition-colors"
+                          title={
+                            item.volume?.title ||
+                            `${item.volume?.series?.title || "Truyện"} - Tập ${item.volume?.volumeNumber}`
+                          }
                         >
-                          {item.volume?.title || `Sản phẩm #${item.volumeId}`}
+                          {item.volume?.title ||
+                            `${item.volume?.series?.title || "Truyện"} - Tập ${item.volume?.volumeNumber}`}
                         </Link>
                         <p className="text-sm text-gray-500 font-medium mt-1">
                           Số lượng: {item.quantity}
