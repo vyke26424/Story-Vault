@@ -476,22 +476,32 @@ const CheckoutPage = () => {
                     className="w-16 h-24 object-cover rounded-lg border border-sv-pale"
                   />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-sv-brown text-sm line-clamp-2 leading-snug">
-                      {item.title}
+                    <h4
+                      className="font-bold text-sv-brown text-sm line-clamp-2 leading-snug"
+                      title={
+                        item.title ||
+                        `${item.series?.title} - Tập ${item.volumeNumber}`
+                      }
+                    >
+                      {item.title ||
+                        `${item.series?.title} - Tập ${item.volumeNumber}`}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
                       SL: {item.quantity}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      {item.originalPrice && item.originalPrice > item.price && (
-                        <span className="text-xs font-bold text-sv-brown line-through opacity-70">
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(item.originalPrice * item.quantity)}
-                        </span>
-                      )}
-                      <span className={`font-black ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}>
+                      {item.originalPrice &&
+                        item.originalPrice > item.price && (
+                          <span className="text-xs font-bold text-sv-brown line-through opacity-70">
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(item.originalPrice * item.quantity)}
+                          </span>
+                        )}
+                      <span
+                        className={`font-black ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
+                      >
                         {new Intl.NumberFormat("vi-VN", {
                           style: "currency",
                           currency: "VND",

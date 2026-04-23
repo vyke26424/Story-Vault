@@ -7,6 +7,22 @@ export class SearchService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * Hàm hỗ trợ: Tạo các biến thể tìm kiếm cho chữ "d" và "đ"
+   * (Do MySQL không tự động phân biệt chữ d và đ khi tìm kiếm text)
+   */
+  private generateVietnameseVariations(str: string): string[] {
+    if (!str) return [];
+    const variations = new Set<string>();
+    variations.add(str);
+
+    if (str.includes('d') || str.includes('đ')) {
+      variations.add(str.replace(/d/g, 'đ')); // Chuyển d thành đ
+      variations.add(str.replace(/đ/g, 'd')); // Chuyển đ thành d
+    }
+    return Array.from(variations);
+  }
+
+  /**
    * 1. LIVE SEARCH PREVIEW (Lấy 5 kết quả nhanh)
    * Hiển thị ngay khi người dùng đang gõ ở Header
    */
@@ -15,15 +31,14 @@ export class SearchService {
 
     const { searchString, volumeNumber } = this.parseSmartQuery(q);
 
+    const searchVariations = this.generateVietnameseVariations(searchString);
+    const searchOrs = searchVariations.flatMap((str) => [
+      { title: { contains: str } },
+      { series: { title: { contains: str } } },
+    ]);
+
     const andConditions: Prisma.VolumeWhereInput[] = [
-      searchString
-        ? {
-            OR: [
-              { title: { contains: searchString } },
-              { series: { title: { contains: searchString } } },
-            ],
-          }
-        : {},
+      searchString ? { OR: searchOrs } : {},
       volumeNumber ? { volumeNumber: volumeNumber } : {},
     ];
 
@@ -74,12 +89,15 @@ export class SearchService {
 
     // Lọc theo chuỗi tìm kiếm (Tên truyện/Tập/Tác giả)
     if (searchString) {
+      const searchVariations = this.generateVietnameseVariations(searchString);
+      const searchOrs = searchVariations.flatMap((str) => [
+        { title: { contains: str } },
+        { series: { title: { contains: str } } },
+        { series: { author: { contains: str } } },
+      ]);
+
       andConditions.push({
-        OR: [
-          { title: { contains: searchString } },
-          { series: { title: { contains: searchString } } },
-          { series: { author: { contains: searchString } } },
-        ],
+        OR: searchOrs,
       });
     }
 
@@ -164,21 +182,37 @@ export class SearchService {
     let volumeNumber: number | null = null;
 
     // 1. Tìm giá tiền (Số >= 1000)
-    const priceMatch = q.match(/\d{4,}/);
+    const priceMatch = searchString.match(/\d{4,}/);
     if (priceMatch) {
       price = parseInt(priceMatch[0]);
       searchString = searchString.replace(priceMatch[0], '');
     }
 
-    // 2. Tìm số tập (Số từ 1-3 chữ số đứng riêng lẻ)
-    const volumeMatch = searchString.match(/\b\d{1,3}\b/);
-    if (volumeMatch) {
-      volumeNumber = parseInt(volumeMatch[0]);
-      searchString = searchString.replace(volumeMatch[0], '');
+    // 2. Tìm số tập (hỗ trợ bắt các từ khóa tập, tap, vol... dính liền với số)
+    const volKeywordRegex =
+      /\b(tập|tap|vol|volume|quyển|quyen|cuốn|cuon)\s*(\d{1,3})\b/i;
+    const volumeKeywordMatch = searchString.match(volKeywordRegex);
+
+    if (volumeKeywordMatch) {
+      volumeNumber = parseInt(volumeKeywordMatch[2]);
+      searchString = searchString.replace(volumeKeywordMatch[0], '');
+    } else {
+      // Nếu không có chữ đi trước thì tìm số đứng độc lập
+      const singleVolumeMatch = searchString.match(/\b\d{1,3}\b/);
+      if (singleVolumeMatch) {
+        volumeNumber = parseInt(singleVolumeMatch[0]);
+        searchString = searchString.replace(singleVolumeMatch[0], '');
+      }
     }
 
+    // 3. Dọn dẹp nốt các từ khóa phụ nếu còn sót (người dùng gõ mà ko kèm số)
+    searchString = searchString.replace(
+      /\b(tập|tap|vol|volume|quyển|quyen|cuốn|cuon)\b/gi,
+      '',
+    );
+
     return {
-      searchString: searchString.trim(),
+      searchString: searchString.replace(/\s+/g, ' ').trim(),
       price,
       volumeNumber,
     };
