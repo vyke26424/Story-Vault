@@ -320,7 +320,8 @@ const SeriesDetailPage = () => {
                       </div>
                       <div className="flex flex-col flex-1 py-0.5 min-w-0">
                         <h3 className="font-black text-sv-brown text-base sm:text-lg line-clamp-2 leading-snug mb-1">
-                          {volume.title || `Tập ${volume.isbn}`}
+                          {volume.title ||
+                            `${series.title} - Tập ${volume.volumeNumber}`}
                         </h3>
                         <p className="text-xs font-medium text-gray-500 mb-1 truncate">
                           ISBN: {volume.isbn}
@@ -596,10 +597,8 @@ const SeriesDetailPage = () => {
                     </div>
                     <div className="p-3 flex flex-col flex-1">
                       <h3 className="font-black text-sv-brown text-sm line-clamp-2 mb-1 group-hover:opacity-80 transition-colors">
-                        {volume.series?.title || volume.title}{" "}
-                        {volume.volumeNumber
-                          ? `- Tập ${volume.volumeNumber}`
-                          : ""}
+                        {volume.title ||
+                          `${volume.series?.title} - Tập ${volume.volumeNumber}`}
                       </h3>
 
                       <div className="mt-auto flex items-end justify-between pt-2">
