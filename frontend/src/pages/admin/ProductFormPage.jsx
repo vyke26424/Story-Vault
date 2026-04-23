@@ -41,8 +41,10 @@ const ProductFormPage = () => {
 
   const fetchSeries = async () => {
     try {
-      const res = await axiosClient.get("/admin/series");
-      setSeriesList(res.data || []);
+      const res = await axiosClient.get("/admin/series", {
+        params: { limit: 1000 },
+      });
+      setSeriesList(res.data?.data || res.data || []);
     } catch (error) {
       console.error("Lỗi lấy danh sách Series:", error);
     }
@@ -51,7 +53,7 @@ const ProductFormPage = () => {
   const fetchVolumeDetail = async () => {
     try {
       const res = await axiosClient.get(`/volumes/${id}`);
-      const vol = res.data;
+      const vol = res.data?.data || res.data;
       if (vol) {
         setFormData({
           seriesId: vol.seriesId || "",
