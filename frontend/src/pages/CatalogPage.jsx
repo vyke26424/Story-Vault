@@ -78,16 +78,13 @@ const CatalogPage = () => {
         const payload = res.data;
 
         if (payload && payload.meta) {
-          // Trường hợp 1: Backend có phân trang (Có meta)
           setSeries(payload.data || []);
           setTotalPages(payload.meta.totalPages || 1);
           setTotalItems(payload.meta.totalItems || 0);
         } else if (Array.isArray(payload)) {
-          // Trường hợp 2: Fallback nếu Backend chưa có meta (Chỉ trả về mảng)
           setSeries(payload);
           setTotalItems(payload.length);
         } else {
-          // Trường hợp 3: Trống
           setSeries([]);
           setTotalItems(0);
         }
@@ -147,9 +144,8 @@ const CatalogPage = () => {
   };
 
   return (
-    // 👉 ĐÃ FIX: Đổi nền thành sv-cream, font-nunito giống SearchPage
     <div className="bg-sv-cream min-h-screen py-8 font-nunito">
-      {/* BREADCRUMBS BỎ VIỀN TRẮNG ĐỂ HỢP VỚI NỀN CREAM */}
+      {/* BREADCRUMBS */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4 flex items-center gap-2 text-sm font-bold text-gray-500">
         <Link to="/" className="hover:text-sv-brown flex items-center gap-1">
           <Home size={16} /> Trang chủ
@@ -160,8 +156,9 @@ const CatalogPage = () => {
         <span className="text-sv-brown">{TYPE_LABELS[currentType]}</span>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-8">
-        {/* CỘT TRÁI - RỘNG 72 GIỐNG SEARCH PAGE */}
+      {/* 👉 ĐÃ SỬA: Thu hẹp gap giữa Sidebar và Lưới kết quả xuống gap-3 (~3mm) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-3">
+        {/* CỘT TRÁI - SIDEBAR */}
         <aside className="w-full lg:w-72 shrink-0 space-y-6">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-sv-tan">
             <h3 className="text-lg font-black text-sv-brown flex items-center gap-2 mb-4 border-b border-sv-pale pb-3">
@@ -259,14 +256,14 @@ const CatalogPage = () => {
         </aside>
 
         {/* CỘT PHẢI */}
-        <div className="flex-1">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-sv-tan mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex-1 w-full overflow-hidden">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-sv-tan mb-3 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
               <h1 className="text-2xl font-black text-sv-brown">
                 {TYPE_LABELS[currentType]}
               </h1>
               <p className="text-gray-500 font-medium">
-                Tìm thấy {totalItems} cuốn sách
+                Tìm thấy {totalItems} bộ sách
               </p>
             </div>
 
@@ -288,44 +285,46 @@ const CatalogPage = () => {
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-sv-tan shadow-sm">
               <Loader2 className="animate-spin text-sv-brown mb-4" size={48} />
               <p className="text-sv-brown font-bold">Đang lục tìm...</p>
             </div>
           ) : series.length > 0 ? (
             <>
-              {/* LƯỚI SẢN PHẨM BO GÓC TRÒN */}
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* 👉 ĐÃ SỬA: Lưới 4 sản phẩm, gap-3, dùng thẻ dạng chữ nhật đứng (aspect-[3/4]) giống SearchPage */}
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                 {series.map((item) => {
                   const firstVolume = item.volumes?.[0];
                   return (
                     <Link
                       key={item.id}
                       to={`/series/${item.slug}`}
-                      className="bg-white group rounded-2xl overflow-hidden border border-sv-tan hover:border-sv-brown hover:shadow-xl transition-all duration-300 flex flex-col"
+                      className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
                     >
-                      <div className="relative aspect-[2/3] overflow-hidden bg-sv-pale">
+                      <div className="relative aspect-[3/4] w-full bg-sv-pale overflow-hidden flex items-center justify-center p-4 border-b border-sv-tan/30">
                         <img
                           src={
                             item.coverImage ||
                             "https://via.placeholder.com/300x450"
                           }
                           alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-md"
                         />
                       </div>
-                      <div className="p-4 flex flex-col flex-1">
+                      
+                      <div className="p-3 sm:p-4 flex flex-col flex-1 bg-white">
                         <h3 className="font-black text-sv-brown text-sm sm:text-base line-clamp-2 mb-1 group-hover:opacity-80 transition-colors">
                           {item.title}
                         </h3>
-                        <p className="text-xs font-bold text-gray-500 mb-3">
+                        <p className="text-xs font-bold text-gray-500 mb-3 line-clamp-1">
                           {item.author || "Đang cập nhật"}
                         </p>
+                        
                         <div className="mt-auto">
-                          <p className="text-xs font-bold text-gray-400 mb-0.5">
+                          <p className="text-[10px] font-bold text-gray-400 mb-0.5">
                             Giá chỉ từ:
                           </p>
-                          <p className="text-lg font-black text-sv-brown">
+                          <p className="text-lg sm:text-xl font-black text-sv-brown">
                             {firstVolume
                               ? `${new Intl.NumberFormat("vi-VN").format(firstVolume.price)}đ`
                               : "Đang cập nhật"}
@@ -338,8 +337,8 @@ const CatalogPage = () => {
               </div>
 
               {/* THANH PHÂN TRANG */}
-              {totalPages > 0 && (
-                <div className="flex items-center justify-center gap-2 mt-10">
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}

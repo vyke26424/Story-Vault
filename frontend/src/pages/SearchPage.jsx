@@ -169,7 +169,7 @@ const SearchPage = () => {
     <div className="min-h-screen bg-sv-cream py-8 font-nunito">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Kết quả */}
-        <div className="mb-6 bg-white p-6 rounded-3xl border border-sv-tan shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mb-3 bg-white p-6 rounded-3xl border border-sv-tan shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-black text-sv-brown">
               {initialQuery
@@ -198,7 +198,8 @@ const SearchPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-3">
+          
           {/* CỘT TRÁI: BỘ LỌC */}
           <div className="w-full lg:w-72 shrink-0">
             <div className="bg-white rounded-3xl border border-sv-tan p-6 shadow-sm sticky top-24 space-y-8">
@@ -300,9 +301,9 @@ const SearchPage = () => {
           </div>
 
           {/* CỘT PHẢI: KẾT QUẢ VÀ PHÂN TRANG */}
-          <div className="flex-1">
+          <div className="flex-1 w-full overflow-hidden">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
+              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-sv-tan shadow-sm">
                 <Loader2
                   className="animate-spin text-sv-brown mb-4"
                   size={48}
@@ -311,33 +312,37 @@ const SearchPage = () => {
               </div>
             ) : results.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                {/* ĐÃ SỬA: grid-cols-2 md:grid-cols-3 xl:grid-cols-4 để hiển thị 4 sản phẩm 1 hàng trên màn hình lớn */}
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                   {results.map((item) => {
                     const isOutOfStock = item.stock <= 0;
                     return (
                       <Link
                         key={item.id}
                         to={`/series/${item.series?.slug || item.slug}`}
-                        className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col"
+                        className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
                       >
-                        <div className="relative aspect-[2/3] overflow-hidden bg-sv-pale">
+                        {/* ĐÃ SỬA: Thay thế h-2/3 bằng aspect-[3/4] để khung ảnh luôn đứng và đều nhau */}
+                        <div className="relative aspect-[3/4] w-full bg-sv-pale overflow-hidden flex items-center justify-center p-4 border-b border-sv-tan/30">
                           <img
                             src={
                               item.coverImage ||
                               "https://via.placeholder.com/300x450"
                             }
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-md"
                             alt={item.title}
                           />
                           {isOutOfStock && (
-                            <div className="absolute top-2 left-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10">
+                            <div className="absolute top-2 left-2 bg-gray-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm z-10">
                               HẾT HÀNG
                             </div>
                           )}
                         </div>
-                        <div className="p-4 flex flex-col flex-1">
+
+                        {/* ĐÃ SỬA: Để flex-1 để phần text tự động chiếm không gian, không bị đè nén */}
+                        <div className="p-3 sm:p-4 flex flex-col flex-1 bg-white">
                           <h3
-                            className="font-black text-sv-brown text-sm sm:text-base line-clamp-2 mb-2 group-hover:opacity-80 transition-opacity"
+                            className="font-black text-sv-brown text-sm line-clamp-2 mb-3 group-hover:opacity-80 transition-opacity"
                             title={
                               item.title ||
                               `${item.series?.title} - Tập ${item.volumeNumber}`
@@ -346,11 +351,12 @@ const SearchPage = () => {
                             {item.title ||
                               `${item.series?.title} - Tập ${item.volumeNumber}`}
                           </h3>
+                          
                           <div className="mt-auto flex items-end justify-between">
                             <div className="flex flex-col">
                               {item.originalPrice &&
                                 item.originalPrice > item.price && (
-                                  <p className="text-xs font-bold text-sv-brown line-through opacity-70 mb-0.5">
+                                  <p className="text-[10px] font-bold text-sv-brown line-through opacity-70 mb-0.5">
                                     {new Intl.NumberFormat("vi-VN").format(
                                       item.originalPrice,
                                     )}
@@ -358,7 +364,7 @@ const SearchPage = () => {
                                   </p>
                                 )}
                               <p
-                                className={`font-black text-lg ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
+                                className={`font-black text-sm sm:text-base ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
                               >
                                 {new Intl.NumberFormat("vi-VN").format(
                                   item.price || 0,
@@ -369,12 +375,12 @@ const SearchPage = () => {
                             <button
                               disabled={isOutOfStock}
                               onClick={(e) => handleAddToCart(e, item)}
-                              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${isOutOfStock ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-sv-wheat text-sv-brown hover:bg-sv-brown hover:text-white"}`}
+                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 ${isOutOfStock ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-sv-wheat text-sv-brown hover:bg-sv-brown hover:text-white"}`}
                               title={
                                 isOutOfStock ? "Hết hàng" : "Thêm vào giỏ hàng"
                               }
                             >
-                              <ShoppingCart size={18} strokeWidth={2.5} />
+                              <ShoppingCart size={14} strokeWidth={2.5} />
                             </button>
                           </div>
                         </div>
@@ -385,7 +391,7 @@ const SearchPage = () => {
 
                 {/* THANH PHÂN TRANG */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-10">
+                  <div className="flex items-center justify-center gap-2 mt-8">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}

@@ -47,9 +47,8 @@ const HomePage = () => {
         setLoading(true);
         const types = Object.keys(TYPE_LABELS);
 
-        // Chuẩn bị các API cần gọi (Thêm API lấy 12 cuốn HOT nhất lên đầu)
         const promises = [
-          axiosClient.get(`/search?sort=sold_desc&limit=12`), // Lấy Top 12 cuốn bán chạy nhất
+          axiosClient.get(`/search?sort=sold_desc&limit=12`),
           ...types.map((type) =>
             axiosClient.get(`/search?type=${type}&limit=30`),
           ),
@@ -57,11 +56,9 @@ const HomePage = () => {
 
         const results = await Promise.all(promises);
 
-        // 1. Bóc tách dữ liệu Sản phẩm HOT
         const hotPayload = results[0].data?.data || results[0].data || [];
         setHotProducts(Array.isArray(hotPayload) ? hotPayload : []);
 
-        // 2. Bóc tách dữ liệu các Danh mục (bỏ qua phần tử đầu tiên đã dùng cho HOT)
         const newSections = {};
         types.forEach((type, index) => {
           const res = results[index + 1];
@@ -70,7 +67,6 @@ const HomePage = () => {
             ? payload
             : payload.data || [];
 
-          // Trộn ngẫu nhiên (Shuffle) và cắt lấy đúng 12 cuốn
           const shuffled = [...dataList]
             .sort(() => 0.5 - Math.random())
             .slice(0, 12);
@@ -104,14 +100,11 @@ const HomePage = () => {
 
   return (
     <div className="font-nunito pb-12 bg-sv-cream min-h-screen">
-      {/* z-40 để nổi lên trên nền nhưng chìm dưới Header (z-50) */}
       <div className="hidden 2xl:block">
-        {/* Banner Trái */}
         <Link
           to="/catalog?type=MANGA"
           className="fixed left-6 top-1/2 -translate-y-1/2 z-40 hover:scale-105 transition-transform duration-300 shadow-xl rounded-2xl overflow-hidden border-2 border-sv-tan"
         >
-          {/* Link ảnh giả lập (Sếp thay bằng link ảnh tĩnh tông màu nâu/cream của sếp nhé) */}
           <img
             src={LeftBanner}
             alt="Banner Trái"
@@ -119,12 +112,10 @@ const HomePage = () => {
           />
         </Link>
 
-        {/* Banner Phải */}
         <Link
           to="/catalog?type=LIGHT_NOVEL"
           className="fixed right-6 top-1/2 -translate-y-1/2 z-40 hover:scale-105 transition-transform duration-300 shadow-xl rounded-2xl overflow-hidden border-2 border-sv-tan"
         >
-          {/* Link ảnh giả lập (Tông màu Tan sáng hơn) */}
           <img
             src={RightBanner}
             alt="Banner Phải"
@@ -133,7 +124,7 @@ const HomePage = () => {
         </Link>
       </div>
 
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-3">
         <div className="rounded-3xl overflow-hidden shadow-lg border border-sv-tan relative">
           <Swiper
             modules={[Autoplay, Pagination, Navigation]}
@@ -160,7 +151,7 @@ const HomePage = () => {
 
       {/* --- SẢN PHẨM HOT (SLIDER) --- */}
       {hotProducts.length > 0 && (
-        <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-3">
           <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-sv-tan overflow-hidden">
             <div className="flex items-center mb-6 border-b border-sv-pale pb-4">
               <h2 className="text-2xl md:text-3xl font-black text-red-600 uppercase tracking-wider flex items-center gap-3">
@@ -173,31 +164,30 @@ const HomePage = () => {
               </h2>
             </div>
 
-            {/* Slider 6 Sản phẩm, cuộn mượt vô tận */}
             <div className="-mx-2 px-2">
               <Swiper
                 modules={[Autoplay, Navigation]}
-                spaceBetween={20}
-                slidesPerView={2} // Mobile hiện 2 cuốn
+                spaceBetween={12}
+                slidesPerView={2}
                 breakpoints={{
-                  640: { slidesPerView: 3 }, // Tablet hiện 3 cuốn
-                  768: { slidesPerView: 4 }, // Laptop nhỏ hiện 4 cuốn
-                  1024: { slidesPerView: 6 }, // PC chuẩn hiện đúng 6 cuốn không bị cắt
+                  640: { slidesPerView: 3 },
+                  768: { slidesPerView: 4 },
+                  1024: { slidesPerView: 6 },
                 }}
                 loop={true}
                 autoplay={{ delay: 3000, disableOnInteraction: false }}
-                navigation={true} // Bật mũi tên chuyển slide
+                navigation={true}
                 className="pb-4"
               >
                 {hotProducts.map((item) => {
                   const isOutOfStock = item.stock <= 0;
                   return (
-                    <SwiperSlide key={item.id} className="h-auto">
+                    <SwiperSlide key={item.id} className="h-auto pb-2">
                       <Link
                         to={`/series/${item.series?.slug || item.slug}`}
-                        className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-md hover:border-sv-brown transition-all group flex flex-col h-full"
+                        className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
                       >
-                        <div className="relative aspect-[2/3] overflow-hidden bg-sv-pale">
+                        <div className="relative aspect-[3/4] w-full bg-sv-pale overflow-hidden flex items-center justify-center p-4 border-b border-sv-tan/30">
                           <img
                             src={
                               item.coverImage ||
@@ -205,21 +195,21 @@ const HomePage = () => {
                               "https://via.placeholder.com/300x450"
                             }
                             alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-md"
                           />
-                          {/* Badge HOT */}
-                          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm">
+                          <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm z-10">
                             HOT
                           </div>
                           {isOutOfStock && (
-                            <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10">
+                            <div className="absolute top-2 right-2 bg-gray-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm z-10">
                               HẾT HÀNG
                             </div>
                           )}
                         </div>
-                        <div className="p-3 flex flex-col flex-1">
+                        
+                        <div className="p-3 flex flex-col flex-1 bg-white">
                           <h3
-                            className="font-black text-sv-brown text-sm line-clamp-2 mb-1 group-hover:opacity-80 transition-colors"
+                            className="font-black text-sv-brown text-sm line-clamp-2 mb-1 group-hover:opacity-80 transition-opacity"
                             title={
                               item.title ||
                               `${item.series?.title} - Tập ${item.volumeNumber}`
@@ -228,14 +218,14 @@ const HomePage = () => {
                             {item.title ||
                               `${item.series?.title} - Tập ${item.volumeNumber}`}
                           </h3>
-                          <p className="text-xs text-gray-500 font-bold mb-2">
+                          <p className="text-[10px] text-gray-500 font-bold mb-3">
                             Đã bán: {item.soldCount || 0}
                           </p>
-                          <div className="mt-auto flex items-end justify-between pt-2">
+                          <div className="mt-auto flex items-end justify-between">
                             <div className="flex flex-col min-w-0">
                               {item.originalPrice &&
                                 item.originalPrice > item.price && (
-                                  <p className="text-[11px] font-bold text-sv-brown line-through opacity-70 mb-0.5 truncate">
+                                  <p className="text-[10px] font-bold text-sv-brown line-through opacity-70 mb-0.5 truncate">
                                     {new Intl.NumberFormat("vi-VN").format(
                                       item.originalPrice,
                                     )}
@@ -243,7 +233,7 @@ const HomePage = () => {
                                   </p>
                                 )}
                               <p
-                                className={`font-black text-base truncate ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
+                                className={`font-black text-sm sm:text-base truncate ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
                               >
                                 {new Intl.NumberFormat("vi-VN").format(
                                   item.price || 0,
@@ -270,8 +260,8 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* --- CÁC DANH MỤC TRUYỆN  --- */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      {/* --- CÁC DANH MỤC TRUYỆN --- */}
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
         {Object.entries(TYPE_LABELS).map(([type, { label, Icon, color }]) => {
           const items = sections[type] || [];
           if (items.length === 0) return null;
@@ -293,16 +283,16 @@ const HomePage = () => {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {items.map((item) => {
                   const isOutOfStock = item.stock <= 0;
                   return (
                     <Link
                       key={item.id}
                       to={`/series/${item.series?.slug || item.slug}`}
-                      className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-md hover:border-sv-brown transition-all group flex flex-col"
+                      className="bg-white rounded-2xl border border-sv-tan overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
                     >
-                      <div className="relative aspect-[2/3] overflow-hidden bg-sv-pale">
+                      <div className="relative aspect-[3/4] w-full bg-sv-pale overflow-hidden flex items-center justify-center p-4 border-b border-sv-tan/30">
                         <img
                           src={
                             item.coverImage ||
@@ -310,17 +300,18 @@ const HomePage = () => {
                             "https://via.placeholder.com/300x450"
                           }
                           alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-md"
                         />
                         {isOutOfStock && (
-                          <div className="absolute top-2 left-2 bg-gray-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm z-10">
+                          <div className="absolute top-2 left-2 bg-gray-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm z-10">
                             HẾT HÀNG
                           </div>
                         )}
                       </div>
-                      <div className="p-3 flex flex-col flex-1">
+                      
+                      <div className="p-3 sm:p-4 flex flex-col flex-1 bg-white">
                         <h3
-                          className="font-black text-sv-brown text-sm line-clamp-2 mb-1 group-hover:opacity-80 transition-colors"
+                          className="font-black text-sv-brown text-sm line-clamp-2 mb-3 group-hover:opacity-80 transition-opacity"
                           title={
                             item.title ||
                             `${item.series?.title} - Tập ${item.volumeNumber}`
@@ -329,11 +320,11 @@ const HomePage = () => {
                           {item.title ||
                             `${item.series?.title} - Tập ${item.volumeNumber}`}
                         </h3>
-                        <div className="mt-auto flex items-end justify-between pt-2">
+                        <div className="mt-auto flex items-end justify-between">
                           <div className="flex flex-col min-w-0">
                             {item.originalPrice &&
                               item.originalPrice > item.price && (
-                                <p className="text-[11px] font-bold text-sv-brown line-through opacity-70 mb-0.5 truncate">
+                                <p className="text-[10px] font-bold text-sv-brown line-through opacity-70 mb-0.5 truncate">
                                   {new Intl.NumberFormat("vi-VN").format(
                                     item.originalPrice,
                                   )}
@@ -341,7 +332,7 @@ const HomePage = () => {
                                 </p>
                               )}
                             <p
-                              className={`font-black text-base truncate ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
+                              className={`font-black text-sm sm:text-base truncate ${item.originalPrice && item.originalPrice > item.price ? "text-red-600" : "text-sv-brown"}`}
                             >
                               {new Intl.NumberFormat("vi-VN").format(
                                 item.price || 0,
